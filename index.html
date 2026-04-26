@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>吹奏楽ディスカッション</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root {
+  --bg:#0d0d0d;--surface:#1a1a1a;--surface2:#242424;--surface3:#2e2e2e;
+  --border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.18);
+  --text:#e8e8e8;--text2:#999;--text3:#555;
+  --accent:#c8a84b;--accent2:#e0c068;--danger:#e05050;
+  --grid:rgba(255,255,255,0.03);--note-text:#1a1a1a;--topbg:rgba(13,13,13,0.97);
+}
+body.light{
+  --bg:#f0f0ec;--surface:#fff;--surface2:#f5f5f2;--surface3:#ebebeb;
+  --border:rgba(0,0,0,0.07);--border2:rgba(0,0,0,0.18);
+  --text:#1a1a1a;--text2:#666;--text3:#aaa;
+  --accent:#9a6f10;--accent2:#b87d14;--danger:#c0392b;
+  --grid:rgba(0,0,0,0.04);--topbg:rgba(240,240,236,0.97);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Hiragino Kaku Gothic Pro','Yu Gothic',sans-serif;
+  background:var(--bg);color:var(--text);overflow:hidden;height:100vh;
+  transition:background .25s,color .25s;}
+
+#topBar{position:fixed;top:0;left:0;right:0;height:44px;
+  background:var(--topbg);border-bottom:1px solid var(--border2);
+  display:flex;align-items:center;gap:6px;padding:0 12px;
+  z-index:600;backdrop-filter:blur(10px);}
+#appTitle{font-size:13px;font-weight:700;color:var(--accent);
+  letter-spacing:.08em;margin-right:6px;white-space:nowrap;}
+.tbtn{font-size:11px;padding:4px 10px;background:var(--surface2);
+  border:1px solid var(--border2);border-radius:5px;color:var(--text);
+  cursor:pointer;white-space:nowrap;transition:background .15s,border-color .15s;}
+.tbtn:hover{background:var(--surface3);border-color:var(--accent);}
+.tbtn.on{background:var(--accent);color:#000;font-weight:700;border-color:var(--accent);}
+#adminBadge{font-size:10px;padding:2px 8px;background:var(--danger);
+  color:#fff;border-radius:10px;font-weight:700;display:none;}
+#syncDot{font-size:10px;padding:2px 8px;border-radius:10px;
+  background:var(--surface2);border:1px solid var(--border2);color:var(--text3);}
+#syncDot.ok{border-color:#4a9;color:#4a9;}
+#syncDot.err{border-color:var(--danger);color:var(--danger);}
+#sp{flex:1;}
+#zoomLbl{font-size:11px;color:var(--text3);min-width:42px;text-align:right;}
+
+#viewport{position:fixed;top:44px;left:0;right:0;bottom:0;overflow:hidden;
+  background:var(--bg);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),
+    linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:40px 40px;}
+#canvas{width:4000px;height:4000px;position:absolute;transform-origin:0 0;}
+
+.note{position:absolute;padding:10px 12px;border-radius:8px;
+  min-width:160px;max-width:260px;cursor:grab;user-select:none;
+  box-shadow:0 4px 20px rgba(0,0,0,0.4);}
+.note-text{font-size:13px;line-height:1.5;white-space:pre-wrap;color:var(--note-text);font-weight:500;}
+.note-author{font-size:11px;color:rgba(0,0,0,0.45);margin-top:4px;}
+.note-del{position:absolute;top:4px;right:4px;background:var(--danger);
+  color:#fff;border:none;border-radius:3px;font-size:10px;padding:1px 5px;cursor:pointer;display:none;}
+body.admin-mode .note-del{display:block;}
+.reply-btn{font-size:11px;margin-top:6px;padding:2px 8px;
+  border:1px solid rgba(0,0,0,0.2);border-radius:4px;
+  background:rgba(255,255,255,0.4);cursor:pointer;display:inline-block;color:#222;}
+.reply-btn:hover{background:rgba(255,255,255,0.7);}
+.toggle-btn{font-size:11px;cursor:pointer;color:rgba(0,0,0,0.5);margin-top:4px;display:none;}
+.replies-wrap{margin-top:4px;}
+.reply-item{margin:4px 0 0 8px;border-left:2px solid rgba(0,0,0,0.2);
+  padding:4px 6px;font-size:12px;color:#222;
+  background:rgba(255,255,255,0.35);border-radius:0 4px 4px 0;
+  display:flex;align-items:center;justify-content:space-between;}
+.reply-del{background:var(--danger);color:#fff;border:none;border-radius:3px;
+  font-size:10px;padding:1px 5px;cursor:pointer;display:none;flex-shrink:0;margin-left:6px;}
+body.admin-mode .reply-del{display:block;}
+
+#inputBox{position:fixed;background:var(--surface);border:1px solid var(--border2);
+  border-radius:10px;padding:14px;display:none;z-index:700;width:230px;
+  box-shadow:0 8px 32px rgba(0,0,0,0.5);}
+#inputBox label{font-size:11px;color:var(--text2);display:block;margin-bottom:2px;}
+#inputBox input,#inputBox textarea,#inputBox select{
+  width:100%;margin-bottom:8px;font-size:13px;
+  background:var(--surface2);border:1px solid var(--border2);
+  border-radius:5px;color:var(--text);padding:5px 8px;}
+#inputBox select option{background:var(--surface2);}
+#inputBox textarea{height:70px;resize:vertical;}
+.ib-row{display:flex;gap:6px;margin-top:2px;}
+.ib-row button{flex:1;font-size:12px;padding:5px;background:var(--surface2);
+  border:1px solid var(--border2);border-radius:5px;color:var(--text);cursor:pointer;}
+.ib-ok{background:var(--accent)!important;color:#000!important;
+  font-weight:700!important;border-color:var(--accent)!important;}
+#ibMode{font-size:12px;font-weight:700;color:var(--accent);margin-bottom:10px;}
+
+#palette{position:fixed;right:0;top:44px;width:240px;
+  background:var(--surface);border-left:1px solid var(--border2);
+  display:flex;flex-direction:column;z-index:500;
+  height:calc(100vh - 44px);transition:transform .25s ease;}
+#palette.collapsed{transform:translateX(240px);}
+#paletteToggle{position:fixed;top:50%;transform:translateY(-50%);
+  z-index:501;background:var(--accent);color:#000;
+  border:none;border-radius:6px 0 0 6px;padding:10px 6px;
+  cursor:pointer;font-size:12px;writing-mode:vertical-rl;
+  letter-spacing:.1em;font-weight:700;transition:right .25s;right:0;}
+#palette:not(.collapsed)~#paletteToggle{right:240px;}
+#paletteHeader{padding:10px 12px;border-bottom:1px solid var(--border2);
+  font-size:12px;font-weight:700;color:var(--accent);flex-shrink:0;}
+#paletteList{flex:1;overflow-y:auto;padding:8px;}
+#paletteList::-webkit-scrollbar{width:4px;}
+#paletteList::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+.pitem{background:var(--surface2);border:1px solid var(--border2);
+  border-radius:7px;padding:10px 12px;margin-bottom:8px;cursor:pointer;
+  transition:border-color .15s,background .15s;position:relative;}
+.pitem:hover{border-color:var(--accent);background:var(--surface3);}
+.pitem-title{font-size:12px;font-weight:700;color:var(--accent2);margin-bottom:2px;}
+.pitem-desc{font-size:11px;color:var(--text2);line-height:1.4;
+  overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
+.pitem-meta{font-size:10px;color:var(--text3);margin-top:5px;}
+.pitem-del{position:absolute;top:6px;right:6px;background:var(--danger);
+  color:#fff;border:none;border-radius:3px;font-size:10px;padding:1px 5px;
+  cursor:pointer;display:none;}
+body.admin-mode .pitem-del{display:block;}
+#paletteEmpty{font-size:12px;color:var(--text3);text-align:center;padding:20px 0;line-height:1.8;}
+
+#threadView{position:fixed;inset:0;top:44px;z-index:800;
+  background:var(--bg);display:none;flex-direction:column;}
+#threadView.open{display:flex;}
+#tvBar{height:40px;background:var(--surface);border-bottom:1px solid var(--border2);
+  display:flex;align-items:center;gap:10px;padding:0 14px;flex-shrink:0;}
+#tvBack{font-size:12px;padding:4px 12px;background:var(--surface2);
+  border:1px solid var(--border2);border-radius:5px;color:var(--text);cursor:pointer;}
+#tvBack:hover{background:var(--surface3);}
+#tvTitle{font-size:13px;font-weight:700;color:var(--accent);}
+#tvCount{font-size:11px;color:var(--text2);}
+#tvDesc{font-size:12px;color:var(--text2);padding:8px 16px;
+  background:var(--surface);border-bottom:1px solid var(--border);
+  flex-shrink:0;font-style:italic;}
+#tvContent{flex:1;overflow-y:auto;padding:8px 16px;}
+#tvContent::-webkit-scrollbar{width:6px;}
+#tvContent::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
+
+.post{display:flex;gap:4px;padding:8px 4px;
+  border-bottom:1px solid rgba(128,128,128,0.08);animation:fadeUp .18s ease;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.post:hover{background:rgba(128,128,128,0.04);}
+.pnum{font-size:11px;color:var(--text3);min-width:34px;font-family:monospace;flex-shrink:0;padding-top:1px;}
+.pbody{flex:1;min-width:0;}
+.phead{display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap;}
+.pname{font-size:12px;font-weight:700;color:var(--accent2);}
+.pid{font-size:10px;color:var(--text3);font-family:monospace;}
+.ptime{font-size:10px;color:var(--text3);}
+.ptext{font-size:13px;line-height:1.75;color:var(--text);white-space:pre-wrap;word-break:break-all;}
+.ptext .anc{color:#6db380;cursor:pointer;}
+.ptext .anc:hover{text-decoration:underline;}
+.ptext a{color:var(--accent);text-decoration:none;}
+.pdw{margin-left:4px;flex-shrink:0;padding-top:2px;}
+.pdel{background:none;border:1px solid var(--danger);color:var(--danger);
+  font-size:10px;padding:1px 6px;border-radius:3px;cursor:pointer;display:none;}
+body.admin-mode .pdel{display:block;}
+.pdel:hover{background:var(--danger);color:#fff;}
+
+#tvInput{flex-shrink:0;padding:10px 14px 14px;background:var(--surface);border-top:1px solid var(--border2);}
+.tvir{display:flex;gap:8px;margin-bottom:8px;}
+.tvir input{flex:1;font-size:12px;padding:5px 10px;
+  background:var(--surface2);border:1px solid var(--border2);border-radius:5px;color:var(--text);}
+.tvir input:focus{outline:none;border-color:var(--accent);}
+#tvTextarea{width:100%;height:58px;font-size:13px;padding:7px 10px;
+  background:var(--surface2);border:1px solid var(--border2);
+  border-radius:5px;color:var(--text);resize:vertical;margin-bottom:8px;font-family:inherit;}
+#tvTextarea:focus{outline:none;border-color:var(--accent);}
+#tvSubmit{float:right;padding:6px 20px;font-size:13px;font-weight:700;
+  background:var(--accent);color:#000;border:none;border-radius:5px;cursor:pointer;}
+#tvSubmit:hover{background:var(--accent2);}
+
+.mbg{position:fixed;inset:0;z-index:900;background:rgba(0,0,0,0.7);
+  display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+.mbg.open{display:flex;}
+.mbox{background:var(--surface);border:1px solid var(--border2);
+  border-radius:12px;padding:24px;box-shadow:0 16px 48px rgba(0,0,0,0.7);}
+.mbox h3{font-size:14px;color:var(--accent);margin-bottom:14px;}
+.mbox label{font-size:11px;color:var(--text2);display:block;margin-bottom:3px;}
+.mbox input,.mbox textarea{width:100%;margin-bottom:12px;font-size:13px;
+  background:var(--surface2);border:1px solid var(--border2);
+  border-radius:6px;color:var(--text);padding:8px 10px;}
+.mbox input:focus,.mbox textarea:focus{outline:none;border-color:var(--accent);}
+.mbox textarea{height:80px;resize:vertical;}
+.mr{display:flex;gap:8px;}
+.mr button{flex:1;padding:7px;border-radius:6px;font-size:13px;cursor:pointer;
+  border:1px solid var(--border2);background:var(--surface2);color:var(--text);}
+.mpri{background:var(--accent)!important;color:#000!important;font-weight:700!important;border-color:var(--accent)!important;}
+.merr{font-size:11px;color:var(--danger);margin-bottom:8px;display:none;}
+
+#scoreBox{width:88%;max-width:640px;max-height:85vh;overflow-y:auto;}
+.ssec{background:var(--surface2);border-radius:6px;padding:10px 12px;
+  margin-bottom:10px;font-size:12px;color:var(--text2);line-height:1.8;}
+.ssec strong{color:var(--text);display:block;margin-bottom:4px;}
+
+#loadOver{position:fixed;inset:0;z-index:9999;background:var(--bg);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;}
+#loadOver.hide{display:none;}
+.spin{width:32px;height:32px;border:3px solid var(--border2);
+  border-top-color:var(--accent);border-radius:50%;animation:sp .8s linear infinite;}
+@keyframes sp{to{transform:rotate(360deg)}}
+#loadMsg{font-size:13px;color:var(--text2);}
+#hint{position:fixed;left:12px;bottom:12px;font-size:10px;
+  color:var(--text3);z-index:200;pointer-events:none;line-height:1.8;}
+</style>
+</head>
+<body>
+
+<div id="loadOver">
+  <div class="spin"></div>
+  <div id="loadMsg">Supabaseに接続中...</div>
+</div>
+
+<div id="topBar">
+  <div id="appTitle">🎵 吹奏楽板</div>
+  <button class="tbtn" id="btnNote">＋ 付箋</button>
+  <button class="tbtn" id="btnThread">💬 スレ作成</button>
+  <button class="tbtn" id="btnScore">📄 スコア</button>
+  <button class="tbtn" id="btnTheme">🌙 ダーク</button>
+  <button class="tbtn" id="btnAdmin">🔑 管理者</button>
+  <div id="adminBadge">ADMIN</div>
+  <div id="sp"></div>
+  <div id="syncDot">接続中...</div>
+  <div id="zoomLbl">100%</div>
+  <button class="tbtn" id="zIn">＋</button>
+  <button class="tbtn" id="zOut">－</button>
+</div>
+
+<div id="viewport"><div id="canvas"></div></div>
+
+<div id="palette">
+  <div id="paletteHeader">💬 討論スレ一覧</div>
+  <div id="paletteList">
+    <div id="paletteEmpty">スレがまだありません<br>「スレ作成」から作りましょう</div>
+  </div>
+</div>
+<button id="paletteToggle">スレ一覧</button>
+
+<div id="threadView">
+  <div id="tvBar">
+    <button id="tvBack">← 戻る</button>
+    <div id="tvTitle"></div>
+    <div id="tvCount"></div>
+  </div>
+  <div id="tvDesc"></div>
+  <div id="tvContent"></div>
+  <div id="tvInput">
+    <div class="tvir">
+      <input id="pName" placeholder="名前（省略→名無し）">
+      <input id="pTrip" placeholder="◆トリップ（任意）" style="max-width:130px">
+    </div>
+    <textarea id="tvTextarea" placeholder="本文を入力… (Shift+Enterで送信)"></textarea>
+    <button id="tvSubmit">書き込む</button>
+    <div style="clear:both"></div>
+  </div>
+</div>
+
+<div id="inputBox">
+  <div id="ibMode"></div>
+  <label>ニックネーム</label>
+  <input id="ibName" placeholder="名無し">
+  <label>内容</label>
+  <textarea id="ibText" placeholder="ここに入力..."></textarea>
+  <label id="ibCL">付箋の色</label>
+  <select id="ibColor">
+    <option value="#fff8a6">黄色</option>
+    <option value="#a6f0ff">水色</option>
+    <option value="#caffbf">緑</option>
+    <option value="#ffc6ff">ピンク</option>
+    <option value="#ffd6a5">オレンジ</option>
+  </select>
+  <div class="ib-row">
+    <button class="ib-ok" id="ibOk">作成</button>
+    <button id="ibRestore">復元</button>
+    <button id="ibCancel">×</button>
+  </div>
+</div>
+
+<!-- Thread modal -->
+<div class="mbg" id="threadModal">
+  <div class="mbox" style="width:360px">
+    <h3>💬 新しい討論スレを作成</h3>
+    <label>タイトル</label>
+    <input id="tmTitle" placeholder="例：第1楽章のテンポについて">
+    <label>テーマの説明</label>
+    <textarea id="tmDesc" placeholder="このスレで議論する内容…"></textarea>
+    <div class="mr">
+      <button class="mpri" id="tmOk">作成する</button>
+      <button id="tmCancel">キャンセル</button>
+    </div>
+  </div>
+</div>
+
+<!-- Password modal -->
+<div class="mbg" id="pwModal">
+  <div class="mbox" style="width:300px">
+    <h3>🔑 管理者ログイン</h3>
+    <p style="font-size:11px;color:var(--text2);margin-bottom:12px">管理者パスワードを入力してください</p>
+    <input type="password" id="pwIn" placeholder="パスワード">
+    <div class="merr" id="pwErr">パスワードが違います</div>
+    <div class="mr">
+      <button class="mpri" id="pwOk">ログイン</button>
+      <button id="pwCancel">キャンセル</button>
+    </div>
+  </div>
+</div>
+
+<!-- Score modal -->
+<div class="mbg" id="scoreModal">
+  <div class="mbox" id="scoreBox">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <h3 style="margin:0">📄 Y Ddraig Goch — スコア</h3>
+      <button class="tbtn" id="scoreClose">閉じる</button>
+    </div>
+    <div class="ssec"><strong>編成</strong>Piccolo / 1st・2nd Fl. / 1&2 Obs. / E.Hrn / E♭ Cl. / 1st・2nd・3rd B♭ Cl. / A.Cl. / B.Cl. / 1&2 Bsns. / S.Sax / 1st・2nd A.Sax / T.Sax / B.Sax / E♭ Cor. / 1st・2nd・3rd Trp. / 1&2・3&4 Hrs. / 1・2・B.Trb. / Euph. / Tuba / S.Bass / Timp. / Perc.</div>
+    <div class="ssec"><strong>楽章構成</strong>mm.1–46: Molto Allegro ♩=168<br>mm.47–66: Appassionato<br>mm.67–77: Lento ♩=50~54（6/8）<br>mm.78–105: ♩=168 復帰<br>mm.106–112: Con moto ♩=72 / rall.<br>mm.113–131: Lento ♩=50~54<br>mm.132–172: Poco più mosso ♩=60（E♭長調）<br>mm.173–215: Molto vivace ♩=138<br>mm.216–288: 再現・終結</div>
+    <div class="ssec"><strong>演奏上の注意</strong>・S.D.「always dominant」, Trp./Cor.「mute」(mm.1–6)<br>・ƒ＋pの急激ダイナミクス変化多用<br>・ƒ con tutta forza (mm.47–)<br>・B.D. solo Ï (mm.83–)<br>・7連符パッセージ(木管, mm.88)<br>・tutti arco ƒ (mm.173)<br>・ƒ al fine — accelerando</div>
+  </div>
+</div>
+
+<div id="hint">空白クリック → 付箋 ／ 右パレット → 討論スレ</div>
+
+<script>
+// ── Supabase ──────────────────────────────────
+const SUPABASE_URL = "https://mfnhrpdrlatymhgaguuh.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1mbmhycGRybGF0eW1oZ2FndXVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxMjEyMTksImV4cCI6MjA5MjY5NzIxOX0.i9cOnqE2SrW4mAYOsA7YxsI5U3jWWYOsYgtfhM3eQVs";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ── State ─────────────────────────────────────
+const ADMIN_PW = "brass2024";
+let isAdmin = false, isDark = true;
+let scale = 1, ox = 0, oy = 0;
+let panning = false, panSX, panSY;
+let mdX, mdY, mdT;
+let justClosed = false;
+let ibMode = "note", ibNoteEl = null, ibNoteId = null, ibCX, ibCY;
+const draftN = [], draftR = [];
+let curThread = null;
+let curPosts = [];
+let noteEls = {};   // uuid -> DOM
+let rtThreadCh = null;
+
+// ── DOM ───────────────────────────────────────
+const cv = document.getElementById("canvas");
+const vp = document.getElementById("viewport");
+const inputBox = document.getElementById("inputBox");
+const ibText = document.getElementById("ibText");
+const ibName = document.getElementById("ibName");
+const ibColor = document.getElementById("ibColor");
+const palette = document.getElementById("palette");
+const pList = document.getElementById("paletteList");
+const pEmpty = document.getElementById("paletteEmpty");
+const threadView = document.getElementById("threadView");
+const tvContent = document.getElementById("tvContent");
+const tvTitle = document.getElementById("tvTitle");
+const tvCount = document.getElementById("tvCount");
+const tvDesc = document.getElementById("tvDesc");
+const tvTA = document.getElementById("tvTextarea");
+const zoomLbl = document.getElementById("zoomLbl");
+const syncDot = document.getElementById("syncDot");
+
+// ── Helpers ───────────────────────────────────
+const pad = n => String(n).padStart(2,"0");
+const uid6 = () => Math.random().toString(36).slice(2,8).toUpperCase();
+function hash8(s){ let h=0; for(const c of s) h=(Math.imul(31,h)+c.charCodeAt(0))|0; return Math.abs(h).toString(36).slice(0,8).toUpperCase(); }
+function fmtISO(iso){
+  const d=new Date(iso);
+  return `${d.getFullYear()}/${pad(d.getMonth()+1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
+function fmtText(t){
+  return t.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+    .replace(/(>>(\d+))/g,(_,m,n)=>`<span class="anc" onclick="scrollPost(${n})">${m}</span>`)
+    .replace(/(https?:\/\/\S+)/g,'<a href="$1" target="_blank">$1</a>');
+}
+function scrollPost(n){ const els=tvContent.querySelectorAll(".post"); if(els[n-1]) els[n-1].scrollIntoView({behavior:"smooth"}); }
+function setSyncStatus(cls,msg){ syncDot.className=cls; syncDot.textContent=msg; }
+
+// ── Theme ─────────────────────────────────────
+function applyTheme(){
+  document.body.classList.toggle("light",!isDark);
+  document.getElementById("btnTheme").textContent = isDark ? "🌙 ダーク" : "☀ ライト";
+}
+document.getElementById("btnTheme").onclick = () => { isDark=!isDark; applyTheme(); };
+
+// ── Palette toggle ────────────────────────────
+document.getElementById("paletteToggle").onclick = () => palette.classList.toggle("collapsed");
+
+// ── Zoom & Pan ────────────────────────────────
+function setTF(){ cv.style.transform=`translate(${ox}px,${oy}px) scale(${scale})`; zoomLbl.textContent=Math.round(scale*100)+"%"; }
+function zoom(cx,cy,f){ const r=cv.getBoundingClientRect(); ox-=(cx-r.left)*(f-1); oy-=(cy-r.top)*(f-1); scale=Math.max(0.15,Math.min(4,scale*f)); setTF(); }
+vp.addEventListener("wheel",e=>{e.preventDefault();zoom(e.clientX,e.clientY,e.deltaY<0?1.05:0.95);},{passive:false});
+function holdZ(id,f){ const b=document.getElementById(id); let iv; b.addEventListener("mousedown",()=>{iv=setInterval(()=>zoom(window.innerWidth/2,window.innerHeight/2,f),50);}); ["mouseup","mouseleave"].forEach(ev=>b.addEventListener(ev,()=>clearInterval(iv))); }
+holdZ("zIn",1.05); holdZ("zOut",0.95);
+
+vp.addEventListener("mousedown",e=>{
+  if(inputBox.style.display==="block"||threadView.classList.contains("open")) return;
+  const cls=e.target.classList;
+  if(e.target===cv||cls.contains("note")||cls.contains("note-text")||cls.contains("note-author")){
+    panning=true; panSX=e.clientX-ox; panSY=e.clientY-oy;
+  }
+});
+document.addEventListener("mousemove",e=>{ if(panning){ox=e.clientX-panSX;oy=e.clientY-panSY;setTF();} });
+document.addEventListener("mouseup",()=>{ panning=false; });
+
+cv.addEventListener("mousedown",e=>{mdX=e.clientX;mdY=e.clientY;mdT=Date.now();});
+cv.addEventListener("mouseup",e=>{
+  if(inputBox.style.display==="block"||justClosed||e.target!==cv) return;
+  if(Math.abs(e.clientX-mdX)>5||Math.abs(e.clientY-mdY)>5||Date.now()-mdT>400) return;
+  const r=cv.getBoundingClientRect();
+  openIB(e.clientX,e.clientY,(e.clientX-r.left)/scale,(e.clientY-r.top)/scale);
+});
+
+// ── Input Box ─────────────────────────────────
+function openIB(sx,sy,cx,cy,mode="note",el=null,id=null){
+  ibMode=mode; ibNoteEl=el; ibNoteId=id; ibCX=cx; ibCY=cy;
+  document.getElementById("ibMode").textContent=mode==="note"?"📝 新しい付箋":"↩ 返信を追加";
+  document.getElementById("ibCL").style.display=mode==="note"?"":"none";
+  ibColor.style.display=mode==="note"?"":"none";
+  ibText.value="";
+  inputBox.style.display="block";
+  inputBox.style.left=Math.min(sx,window.innerWidth-245)+"px";
+  inputBox.style.top=Math.min(sy,window.innerHeight-230)+"px";
+  setTimeout(()=>ibText.focus(),30);
+}
+function closeIB(){ const v=ibText.value.trim(); if(v)(ibMode==="note"?draftN:draftR).push(v); inputBox.style.display="none"; justClosed=true; setTimeout(()=>justClosed=false,150); }
+document.getElementById("ibOk").onclick=async()=>{
+  const text=ibText.value.trim(),name=ibName.value.trim()||"名無し"; if(!text) return;
+  if(ibMode==="note"){ await sb.from("notes").insert({text,author:name,color:ibColor.value,x:ibCX,y:ibCY}); draftN.length=0; }
+  else { await sb.from("replies").insert({note_id:ibNoteId,text,author:name}); draftR.length=0; }
+  inputBox.style.display="none"; justClosed=true; setTimeout(()=>justClosed=false,150);
+};
+document.getElementById("ibCancel").onclick=e=>{e.stopPropagation();closeIB();};
+document.getElementById("ibRestore").onclick=()=>{ const a=ibMode==="note"?draftN:draftR; if(a.length) ibText.value=a.at(-1); };
+document.addEventListener("mousedown",e=>{ if(inputBox.style.display==="block"&&!inputBox.contains(e.target)) closeIB(); });
+document.getElementById("btnNote").onclick=()=>{
+  openIB(window.innerWidth/2-115,window.innerHeight/2-115,(-ox+window.innerWidth/2)/scale,(-oy+window.innerHeight/2)/scale);
+};
+
+// ── Draggable ─────────────────────────────────
+function mkDrag(el,stop,onEnd){
+  let dx,dy,nx,ny,drag=false;
+  el.addEventListener("mousedown",e=>{
+    if(["BUTTON","SELECT","INPUT","TEXTAREA"].includes(e.target.tagName)) return;
+    if(e.target.classList.contains("reply-btn")||e.target.classList.contains("toggle-btn")) return;
+    if(stop) e.stopPropagation();
+    drag=true; panning=false;
+    dx=e.clientX; dy=e.clientY;
+    nx=parseFloat(el.style.left)||0; ny=parseFloat(el.style.top)||0;
+    el.style.cursor="grabbing"; el.style.zIndex=99;
+  });
+  document.addEventListener("mousemove",e=>{ if(drag){el.style.left=nx+(e.clientX-dx)/scale+"px";el.style.top=ny+(e.clientY-dy)/scale+"px";} });
+  document.addEventListener("mouseup",()=>{ if(drag){drag=false;el.style.cursor="grab";el.style.zIndex="";if(onEnd)onEnd(parseFloat(el.style.left),parseFloat(el.style.top));} });
+}
+
+// ── Render Note ───────────────────────────────
+function renderNote(row){
+  if(noteEls[row.id]) return;
+  const el=document.createElement("div");
+  el.className="note"; el.dataset.id=row.id;
+  el.style.cssText=`background:${row.color};left:${row.x}px;top:${row.y}px`;
+
+  const db=document.createElement("button"); db.className="note-del"; db.textContent="✕";
+  db.onclick=async e=>{e.stopPropagation();if(confirm("削除しますか？"))await sb.from("notes").delete().eq("id",row.id);};
+
+  const nt=document.createElement("div"); nt.className="note-text"; nt.textContent=row.text;
+  const na=document.createElement("div"); na.className="note-author"; na.textContent="— "+row.author;
+  const rb=document.createElement("div"); rb.className="reply-btn"; rb.textContent="↩ 返信";
+  const tb=document.createElement("div"); tb.className="toggle-btn";
+  const rw=document.createElement("div"); rw.className="replies-wrap";
+
+  rb.onclick=e=>{ e.stopPropagation(); if(inputBox.style.display==="block") return; const nr=el.getBoundingClientRect(); openIB(nr.left+10,nr.bottom+6,0,0,"reply",el,row.id); };
+  tb.onclick=e=>{ e.stopPropagation(); const v=rw.style.display!=="none"; rw.style.display=v?"none":"block"; tb.textContent=v?"▶ 返信を表示":"▼ 返信を隠す"; };
+
+  el.append(db,nt,na,rb,tb,rw);
+  mkDrag(el,true,async(nx2,ny2)=>{ await sb.from("notes").update({x:nx2,y:ny2}).eq("id",row.id); });
+  cv.appendChild(el);
+  noteEls[row.id]=el;
+}
+
+function renderReply(row){
+  const el=noteEls[row.note_id]; if(!el) return;
+  if(el.querySelector(`[data-rid="${row.id}"]`)) return;
+  const rw=el.querySelector(".replies-wrap"), tb=el.querySelector(".toggle-btn");
+  const ri=document.createElement("div"); ri.className="reply-item"; ri.dataset.rid=row.id;
+  const sp=document.createElement("span"); sp.textContent=row.text+" — "+row.author;
+  const db=document.createElement("button"); db.className="reply-del"; db.textContent="✕";
+  db.onclick=async()=>{ if(confirm("削除しますか？"))await sb.from("replies").delete().eq("id",row.id); };
+  ri.append(sp,db); rw.appendChild(ri);
+  rw.style.display="block"; tb.style.display="block"; tb.textContent="▼ 返信を隠す";
+}
+
+// ── Palette ───────────────────────────────────
+function addPItem(row){
+  if(document.querySelector(`.pitem[data-tid="${row.id}"]`)) return;
+  pEmpty.style.display="none";
+  const item=document.createElement("div"); item.className="pitem"; item.dataset.tid=row.id;
+  const db=document.createElement("button"); db.className="pitem-del"; db.textContent="✕";
+  db.onclick=async e=>{ e.stopPropagation(); if(confirm("スレを削除しますか？"))await sb.from("threads").delete().eq("id",row.id); };
+  const t=document.createElement("div"); t.className="pitem-title"; t.textContent="💬 "+row.title;
+  const d=document.createElement("div"); d.className="pitem-desc"; d.textContent=row.description||"（説明なし）";
+  const m=document.createElement("div"); m.className="pitem-meta"; m.dataset.mtid=row.id; m.textContent="...";
+  item.append(db,t,d,m);
+  item.addEventListener("click",e=>{ if(e.target===db) return; openThread(row.id,row.title,row.description||""); });
+  pList.appendChild(item);
+  refreshMeta(row.id);
+}
+function removePItem(id){ const el=document.querySelector(`.pitem[data-tid="${id}"]`); if(el) el.remove(); if(!pList.querySelector(".pitem")) pEmpty.style.display="block"; }
+async function refreshMeta(tid){ const m=pList.querySelector(`[data-mtid="${tid}"]`); if(!m) return; const {count}=await sb.from("posts").select("id",{count:"exact",head:true}).eq("thread_id",tid); if(m) m.textContent=(count||0)+" レス"; }
+
+// ── Thread view ───────────────────────────────
+async function openThread(id,title,desc){
+  curThread=id; curPosts=[];
+  tvTitle.textContent="【"+title+"】"; tvDesc.textContent=desc;
+  tvContent.innerHTML='<div style="padding:20px;text-align:center;font-size:12px;color:var(--text3)">読み込み中...</div>';
+  threadView.classList.add("open"); tvTA.value="";
+
+  const {data}=await sb.from("posts").select("*").eq("thread_id",id).order("created_at",{ascending:true});
+  curPosts=data||[];
+  renderTV();
+  subscribeThread(id);
+}
+
+function renderTV(){
+  tvCount.textContent=curPosts.length+" レス";
+  tvContent.innerHTML="";
+  curPosts.forEach((p,i)=>tvContent.appendChild(buildPost(p,i+1)));
+  tvContent.scrollTop=tvContent.scrollHeight;
+}
+
+function buildPost(p,num){
+  const w=document.createElement("div"); w.className="post"; w.dataset.pid=p.id;
+  const n=document.createElement("div"); n.className="pnum"; n.textContent=num;
+  const b=document.createElement("div"); b.className="pbody";
+  const h=document.createElement("div"); h.className="phead";
+  const nm=document.createElement("span"); nm.className="pname"; nm.textContent=p.name+(p.trip?" ◆"+p.trip:"");
+  const id2=document.createElement("span"); id2.className="pid"; id2.textContent="ID:"+p.uid;
+  const tm=document.createElement("span"); tm.className="ptime"; tm.textContent=fmtISO(p.created_at);
+  h.append(nm,id2,tm);
+  const tx=document.createElement("div"); tx.className="ptext"; tx.innerHTML=fmtText(p.content);
+  const dw=document.createElement("div"); dw.className="pdw";
+  const db=document.createElement("button"); db.className="pdel"; db.textContent="削除";
+  db.onclick=async()=>{ if(!confirm("削除しますか？")) return; await sb.from("posts").delete().eq("id",p.id); };
+  dw.appendChild(db); b.append(h,tx); w.append(n,b,dw); return w;
+}
+
+document.getElementById("tvBack").onclick=()=>{ threadView.classList.remove("open"); unsubThread(); curThread=null; };
+document.getElementById("tvSubmit").onclick=postSubmit;
+tvTA.addEventListener("keydown",e=>{ if(e.shiftKey&&e.key==="Enter"){e.preventDefault();postSubmit();} });
+
+async function postSubmit(){
+  if(!curThread) return;
+  const content=tvTA.value.trim(); if(!content) return;
+  const name=document.getElementById("pName").value.trim()||"名無し";
+  const tripR=document.getElementById("pTrip").value.trim();
+  const trip=tripR?hash8(tripR):"";
+  await sb.from("posts").insert({thread_id:curThread,name,trip,uid:uid6(),content});
+  tvTA.value=""; refreshMeta(curThread);
+}
+
+// ── Realtime ──────────────────────────────────
+function subscribeThread(tid){
+  unsubThread();
+  rtThreadCh=sb.channel("t_"+tid)
+    .on("postgres_changes",{event:"INSERT",schema:"public",table:"posts",filter:`thread_id=eq.${tid}`},p=>{
+      if(curThread!==tid||curPosts.find(x=>x.id===p.new.id)) return;
+      curPosts.push(p.new);
+      tvContent.appendChild(buildPost(p.new,curPosts.length));
+      tvCount.textContent=curPosts.length+" レス";
+      tvContent.scrollTop=tvContent.scrollHeight;
+      refreshMeta(tid);
+    })
+    .on("postgres_changes",{event:"DELETE",schema:"public",table:"posts",filter:`thread_id=eq.${tid}`},p=>{
+      curPosts=curPosts.filter(x=>x.id!==p.old.id); renderTV(); refreshMeta(tid);
+    })
+    .subscribe();
+}
+function unsubThread(){ if(rtThreadCh){sb.removeChannel(rtThreadCh);rtThreadCh=null;} }
+
+function subscribeGlobal(){
+  sb.channel("global")
+    .on("postgres_changes",{event:"INSERT",schema:"public",table:"notes"},p=>renderNote(p.new))
+    .on("postgres_changes",{event:"DELETE",schema:"public",table:"notes"},p=>{ const el=noteEls[p.old.id]; if(el){el.remove();delete noteEls[p.old.id];} })
+    .on("postgres_changes",{event:"UPDATE",schema:"public",table:"notes"},p=>{ const el=noteEls[p.new.id]; if(el){el.style.left=p.new.x+"px";el.style.top=p.new.y+"px";} })
+    .on("postgres_changes",{event:"INSERT",schema:"public",table:"replies"},p=>renderReply(p.new))
+    .on("postgres_changes",{event:"DELETE",schema:"public",table:"replies"},p=>{ const el=document.querySelector(`[data-rid="${p.old.id}"]`); if(el)el.remove(); })
+    .on("postgres_changes",{event:"INSERT",schema:"public",table:"threads"},p=>addPItem(p.new))
+    .on("postgres_changes",{event:"DELETE",schema:"public",table:"threads"},p=>removePItem(p.old.id))
+    .subscribe(s=>{ setSyncStatus(s==="SUBSCRIBED"?"ok":"err",s==="SUBSCRIBED"?"🟢 同期中":"🔴 切断"); });
+}
+
+// ── Thread creation ───────────────────────────
+document.getElementById("btnThread").onclick=()=>{ document.getElementById("threadModal").classList.add("open"); setTimeout(()=>document.getElementById("tmTitle").focus(),50); };
+document.getElementById("tmCancel").onclick=()=>document.getElementById("threadModal").classList.remove("open");
+document.getElementById("tmOk").onclick=async()=>{
+  const title=document.getElementById("tmTitle").value.trim(), desc=document.getElementById("tmDesc").value.trim();
+  if(!title) return;
+  await sb.from("threads").insert({title,description:desc});
+  document.getElementById("tmTitle").value=""; document.getElementById("tmDesc").value="";
+  document.getElementById("threadModal").classList.remove("open");
+};
+
+// ── Admin ─────────────────────────────────────
+document.getElementById("btnAdmin").onclick=()=>{
+  if(isAdmin){ isAdmin=false; document.body.classList.remove("admin-mode"); document.getElementById("adminBadge").style.display="none"; document.getElementById("btnAdmin").classList.remove("on"); return; }
+  document.getElementById("pwModal").classList.add("open");
+  document.getElementById("pwIn").value=""; document.getElementById("pwErr").style.display="none";
+  setTimeout(()=>document.getElementById("pwIn").focus(),50);
+};
+document.getElementById("pwOk").onclick=()=>{
+  if(document.getElementById("pwIn").value===ADMIN_PW){
+    isAdmin=true; document.body.classList.add("admin-mode");
+    document.getElementById("adminBadge").style.display="block";
+    document.getElementById("btnAdmin").classList.add("on");
+    document.getElementById("pwModal").classList.remove("open");
+  } else { document.getElementById("pwErr").style.display="block"; document.getElementById("pwIn").value=""; document.getElementById("pwIn").focus(); }
+};
+document.getElementById("pwCancel").onclick=()=>document.getElementById("pwModal").classList.remove("open");
+document.getElementById("pwIn").addEventListener("keydown",e=>{if(e.key==="Enter")document.getElementById("pwOk").click();});
+
+// ── Score ─────────────────────────────────────
+document.getElementById("btnScore").onclick=()=>document.getElementById("scoreModal").classList.add("open");
+document.getElementById("scoreClose").onclick=()=>document.getElementById("scoreModal").classList.remove("open");
+document.getElementById("scoreModal").addEventListener("click",e=>{if(e.target===document.getElementById("scoreModal"))document.getElementById("scoreModal").classList.remove("open");});
+
+// ── Init ──────────────────────────────────────
+async function init(){
+  setSyncStatus("","接続中...");
+  try{
+    const [n,r,t]= await Promise.all([
+      sb.from("notes").select("*").order("created_at",{ascending:true}),
+      sb.from("replies").select("*").order("created_at",{ascending:true}),
+      sb.from("threads").select("*").order("created_at",{ascending:true})
+    ]);
+    if(n.error||r.error||t.error) throw n.error||r.error||t.error;
+    (n.data||[]).forEach(renderNote);
+    (r.data||[]).forEach(renderReply);
+    (t.data||[]).forEach(addPItem);
+    subscribeGlobal();
+    applyTheme();
+    document.getElementById("loadOver").classList.add("hide");
+  } catch(e){
+    document.getElementById("loadMsg").textContent="接続失敗: "+e.message;
+    setSyncStatus("err","🔴 接続失敗");
+  }
+}
+init();
+</script>
+</body>
+</html>
