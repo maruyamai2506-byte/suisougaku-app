@@ -25,6 +25,7 @@ body{font-family:'Hiragino Kaku Gothic Pro','Yu Gothic',sans-serif;
   background:var(--bg);color:var(--text);overflow:hidden;height:100vh;
   transition:background .25s,color .25s;}
 
+/* ── TOP BAR ── */
 #topBar{position:fixed;top:0;left:0;right:0;height:44px;
   background:var(--topbg);border-bottom:1px solid var(--border2);
   display:flex;align-items:center;gap:6px;padding:0 12px;
@@ -45,13 +46,48 @@ body{font-family:'Hiragino Kaku Gothic Pro','Yu Gothic',sans-serif;
 #sp{flex:1;}
 #zoomLbl{font-size:11px;color:var(--text3);min-width:42px;text-align:right;}
 
+/* ── VIEWPORT ── */
 #viewport{position:fixed;top:44px;left:0;right:0;bottom:0;overflow:hidden;
   background:var(--bg);
   background-image:linear-gradient(var(--grid) 1px,transparent 1px),
     linear-gradient(90deg,var(--grid) 1px,transparent 1px);
   background-size:40px 40px;}
-#canvas{width:4000px;height:4000px;position:absolute;transform-origin:0 0;}
+#canvas{width:8000px;height:6000px;position:absolute;transform-origin:0 0;}
 
+/* ── SCORE IMAGES ── */
+.score-img-wrap{position:absolute;cursor:grab;user-select:none;}
+.score-img-wrap img{display:block;border-radius:4px;
+  box-shadow:0 4px 24px rgba(0,0,0,0.6);
+  border:2px solid transparent;transition:border-color .15s;}
+.score-img-wrap:hover img{border-color:var(--accent);}
+.score-img-wrap.pin-mode img{border-color:#e88;cursor:crosshair;}
+.score-img-label{font-size:10px;color:var(--text3);text-align:center;
+  margin-top:4px;letter-spacing:.05em;}
+.score-img-del{position:absolute;top:-8px;right:-8px;
+  background:var(--danger);color:#fff;border:none;border-radius:50%;
+  width:20px;height:20px;font-size:12px;cursor:pointer;
+  display:none;align-items:center;justify-content:center;
+  box-shadow:0 2px 6px rgba(0,0,0,0.4);}
+body.admin-mode .score-img-del{display:flex;}
+.score-img-pin{position:absolute;top:-8px;left:-8px;
+  background:#5a8;color:#fff;border:none;border-radius:50%;
+  width:20px;height:20px;font-size:11px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 2px 6px rgba(0,0,0,0.4);title:"画像上をクリックして付箋を固定";}
+/* resize handle */
+.score-img-resize{position:absolute;bottom:-6px;right:-6px;
+  width:14px;height:14px;background:var(--accent);border-radius:3px;
+  cursor:se-resize;display:none;}
+body.admin-mode .score-img-resize{display:block;}
+
+/* ── SVG ARROW LAYER ── */
+#arrowLayer{position:absolute;top:0;left:0;width:100%;height:100%;
+  pointer-events:none;overflow:visible;}
+.arrow-line{stroke:var(--accent);stroke-width:2px;fill:none;
+  stroke-dasharray:6 3;opacity:0.85;}
+.arrow-dot{fill:var(--accent);opacity:0.9;}
+
+/* ── NOTES ── */
 .note{position:absolute;padding:10px 12px;border-radius:8px;
   min-width:160px;max-width:260px;cursor:grab;user-select:none;
   box-shadow:0 4px 20px rgba(0,0,0,0.4);}
@@ -74,6 +110,7 @@ body.admin-mode .note-del{display:block;}
   font-size:10px;padding:1px 5px;cursor:pointer;display:none;flex-shrink:0;margin-left:6px;}
 body.admin-mode .reply-del{display:block;}
 
+/* ── INPUT BOX ── */
 #inputBox{position:fixed;background:var(--surface);border:1px solid var(--border2);
   border-radius:10px;padding:14px;display:none;z-index:700;width:230px;
   box-shadow:0 8px 32px rgba(0,0,0,0.5);}
@@ -91,6 +128,7 @@ body.admin-mode .reply-del{display:block;}
   font-weight:700!important;border-color:var(--accent)!important;}
 #ibMode{font-size:12px;font-weight:700;color:var(--accent);margin-bottom:10px;}
 
+/* ── PALETTE ── */
 #palette{position:fixed;right:0;top:44px;width:240px;
   background:var(--surface);border-left:1px solid var(--border2);
   display:flex;flex-direction:column;z-index:500;
@@ -121,6 +159,7 @@ body.admin-mode .reply-del{display:block;}
 body.admin-mode .pitem-del{display:block;}
 #paletteEmpty{font-size:12px;color:var(--text3);text-align:center;padding:20px 0;line-height:1.8;}
 
+/* ── THREAD VIEW ── */
 #threadView{position:fixed;inset:0;top:44px;z-index:800;
   background:var(--bg);display:none;flex-direction:column;}
 #threadView.open{display:flex;}
@@ -137,7 +176,6 @@ body.admin-mode .pitem-del{display:block;}
 #tvContent{flex:1;overflow-y:auto;padding:8px 16px;}
 #tvContent::-webkit-scrollbar{width:6px;}
 #tvContent::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
-
 .post{display:flex;gap:4px;padding:8px 4px;
   border-bottom:1px solid rgba(128,128,128,0.08);animation:fadeUp .18s ease;}
 @keyframes fadeUp{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
@@ -157,7 +195,6 @@ body.admin-mode .pitem-del{display:block;}
   font-size:10px;padding:1px 6px;border-radius:3px;cursor:pointer;display:none;}
 body.admin-mode .pdel{display:block;}
 .pdel:hover{background:var(--danger);color:#fff;}
-
 #tvInput{flex-shrink:0;padding:10px 14px 14px;background:var(--surface);border-top:1px solid var(--border2);}
 .tvir{display:flex;gap:8px;margin-bottom:8px;}
 .tvir input{flex:1;font-size:12px;padding:5px 10px;
@@ -171,6 +208,7 @@ body.admin-mode .pdel{display:block;}
   background:var(--accent);color:#000;border:none;border-radius:5px;cursor:pointer;}
 #tvSubmit:hover{background:var(--accent2);}
 
+/* ── MODALS ── */
 .mbg{position:fixed;inset:0;z-index:900;background:rgba(0,0,0,0.7);
   display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
 .mbg.open{display:flex;}
@@ -188,6 +226,24 @@ body.admin-mode .pdel{display:block;}
   border:1px solid var(--border2);background:var(--surface2);color:var(--text);}
 .mpri{background:var(--accent)!important;color:#000!important;font-weight:700!important;border-color:var(--accent)!important;}
 .merr{font-size:11px;color:var(--danger);margin-bottom:8px;display:none;}
+
+/* upload modal */
+#uploadProgress{width:100%;height:6px;background:var(--surface2);
+  border-radius:3px;margin-bottom:12px;overflow:hidden;display:none;}
+#uploadProgressBar{height:100%;background:var(--accent);border-radius:3px;
+  width:0%;transition:width .2s;}
+#uploadStatus{font-size:11px;color:var(--text2);margin-bottom:10px;display:none;}
+.layout-btn{flex:1;font-size:11px;padding:6px 4px;
+  background:var(--surface2);border:1px solid var(--border2);
+  border-radius:5px;color:var(--text);cursor:pointer;}
+.layout-btn.on{background:var(--accent);color:#000;font-weight:700;border-color:var(--accent);}
+
+/* drop zone */
+#dropZone{border:2px dashed var(--border2);border-radius:8px;padding:24px;
+  text-align:center;cursor:pointer;transition:border-color .15s;margin-bottom:12px;}
+#dropZone:hover,#dropZone.drag{border-color:var(--accent);}
+#dropZone p{font-size:12px;color:var(--text2);margin-top:6px;}
+#dropZone .dz-icon{font-size:28px;}
 
 #scoreBox{width:88%;max-width:640px;max-height:85vh;overflow-y:auto;}
 .ssec{background:var(--surface2);border-radius:6px;padding:10px 12px;
@@ -216,7 +272,8 @@ body.admin-mode .pdel{display:block;}
   <div id="appTitle">🎵 吹奏楽板</div>
   <button class="tbtn" id="btnNote">＋ 付箋</button>
   <button class="tbtn" id="btnThread">💬 スレ作成</button>
-  <button class="tbtn" id="btnScore">📄 スコア</button>
+  <button class="tbtn" id="btnUpload">🖼 画像を追加</button>
+  <button class="tbtn" id="btnScore">📄 スコア情報</button>
   <button class="tbtn" id="btnTheme">🌙 ダーク</button>
   <button class="tbtn" id="btnAdmin">🔑 管理者</button>
   <div id="adminBadge">ADMIN</div>
@@ -227,7 +284,17 @@ body.admin-mode .pdel{display:block;}
   <button class="tbtn" id="zOut">－</button>
 </div>
 
-<div id="viewport"><div id="canvas"></div></div>
+<div id="viewport">
+  <div id="canvas">
+    <svg id="arrowLayer" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arrowHead" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L8,3 z" fill="#c8a84b" opacity="0.85"/>
+        </marker>
+      </defs>
+    </svg>
+  </div>
+</div>
 
 <div id="palette">
   <div id="paletteHeader">💬 討論スレ一覧</div>
@@ -237,6 +304,7 @@ body.admin-mode .pdel{display:block;}
 </div>
 <button id="paletteToggle">スレ一覧</button>
 
+<!-- THREAD VIEW -->
 <div id="threadView">
   <div id="tvBar">
     <button id="tvBack">← 戻る</button>
@@ -256,6 +324,7 @@ body.admin-mode .pdel{display:block;}
   </div>
 </div>
 
+<!-- NOTE INPUT -->
 <div id="inputBox">
   <div id="ibMode"></div>
   <label>ニックネーム</label>
@@ -277,7 +346,34 @@ body.admin-mode .pdel{display:block;}
   </div>
 </div>
 
-<!-- Thread modal -->
+<!-- IMAGE UPLOAD MODAL -->
+<div class="mbg" id="uploadModal">
+  <div class="mbox" style="width:400px">
+    <h3>🖼 スコア画像をアップロード</h3>
+    <div id="dropZone">
+      <div class="dz-icon">📁</div>
+      <p>クリックまたはここに画像をドロップ<br>（PNG / JPG — 複数選択可）</p>
+      <input type="file" id="fileInput" accept="image/png,image/jpeg,image/jpg"
+        style="display:none" multiple>
+    </div>
+    <!-- 並べ方選択 -->
+    <div id="layoutSelect" style="display:none;margin-bottom:12px;">
+      <div style="font-size:11px;color:var(--text2);margin-bottom:6px;">複数枚の並べ方を選択</div>
+      <div style="display:flex;gap:8px;">
+        <button class="layout-btn on" id="layoutH" onclick="setLayout('h')">⬌ 横一列</button>
+        <button class="layout-btn" id="layoutV" onclick="setLayout('v')">⬍ 縦一列</button>
+        <button class="layout-btn" id="layoutFree" onclick="setLayout('free')">📍 1枚ずつ手動配置</button>
+      </div>
+    </div>
+    <div id="uploadProgress"><div id="uploadProgressBar"></div></div>
+    <div id="uploadStatus"></div>
+    <div class="mr">
+      <button id="uploadCancel">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<!-- THREAD CREATE MODAL -->
 <div class="mbg" id="threadModal">
   <div class="mbox" style="width:360px">
     <h3>💬 新しい討論スレを作成</h3>
@@ -292,7 +388,7 @@ body.admin-mode .pdel{display:block;}
   </div>
 </div>
 
-<!-- Password modal -->
+<!-- PASSWORD MODAL -->
 <div class="mbg" id="pwModal">
   <div class="mbox" style="width:300px">
     <h3>🔑 管理者ログイン</h3>
@@ -306,11 +402,11 @@ body.admin-mode .pdel{display:block;}
   </div>
 </div>
 
-<!-- Score modal -->
+<!-- SCORE MODAL -->
 <div class="mbg" id="scoreModal">
   <div class="mbox" id="scoreBox">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-      <h3 style="margin:0">📄 Y Ddraig Goch — スコア</h3>
+      <h3 style="margin:0">📄 Y Ddraig Goch — スコア情報</h3>
       <button class="tbtn" id="scoreClose">閉じる</button>
     </div>
     <div class="ssec"><strong>編成</strong>Piccolo / 1st・2nd Fl. / 1&2 Obs. / E.Hrn / E♭ Cl. / 1st・2nd・3rd B♭ Cl. / A.Cl. / B.Cl. / 1&2 Bsns. / S.Sax / 1st・2nd A.Sax / T.Sax / B.Sax / E♭ Cor. / 1st・2nd・3rd Trp. / 1&2・3&4 Hrs. / 1・2・B.Trb. / Euph. / Tuba / S.Bass / Timp. / Perc.</div>
@@ -319,55 +415,58 @@ body.admin-mode .pdel{display:block;}
   </div>
 </div>
 
-<div id="hint">空白クリック → 付箋 ／ 右パレット → 討論スレ</div>
+<div id="hint">空白クリック → 付箋 ／ 右パレット → 討論スレ ／ 🖼 ボタン → スコア画像を追加</div>
 
 <script>
-// ── Supabase ──────────────────────────────────
+// ── Supabase ──────────────────────────────────────────
 const SUPABASE_URL = "https://mfnhrpdrlatymhgaguuh.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1mbmhycGRybGF0eW1oZ2FndXVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxMjEyMTksImV4cCI6MjA5MjY5NzIxOX0.i9cOnqE2SrW4mAYOsA7YxsI5U3jWWYOsYgtfhM3eQVs";
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const BUCKET = "score-images";
 
-// ── State ─────────────────────────────────────
+// ── Constants ─────────────────────────────────────────
 const ADMIN_PW = "brass2024";
+// 画像の横幅(px) ・横間隔・開始位置
+const IMG_WIDTH = 600; // アップロード時のデフォルト幅(px)
+
+// ── State ─────────────────────────────────────────────
 let isAdmin = false, isDark = true;
 let scale = 1, ox = 0, oy = 0;
 let panning = false, panSX, panSY;
 let mdX, mdY, mdT;
 let justClosed = false;
 let ibMode = "note", ibNoteEl = null, ibNoteId = null, ibCX, ibCY;
+let pendingPin = null; // 画像ピンから付箋作成時の pin座標 {pin_x, pin_y}
 const draftN = [], draftR = [];
-let curThread = null;
-let curPosts = [];
+let curThread = null, curPosts = [];
 let noteEls = {};   // uuid -> DOM
+let imgEls  = {};   // uuid -> DOM
 let rtThreadCh = null;
 
-// ── DOM ───────────────────────────────────────
-const cv = document.getElementById("canvas");
-const vp = document.getElementById("viewport");
+// ── DOM ───────────────────────────────────────────────
+const cv       = document.getElementById("canvas");
+const vp       = document.getElementById("viewport");
 const inputBox = document.getElementById("inputBox");
-const ibText = document.getElementById("ibText");
-const ibName = document.getElementById("ibName");
-const ibColor = document.getElementById("ibColor");
-const palette = document.getElementById("palette");
-const pList = document.getElementById("paletteList");
-const pEmpty = document.getElementById("paletteEmpty");
+const ibText   = document.getElementById("ibText");
+const ibName   = document.getElementById("ibName");
+const ibColor  = document.getElementById("ibColor");
+const palette  = document.getElementById("palette");
+const pList    = document.getElementById("paletteList");
+const pEmpty   = document.getElementById("paletteEmpty");
 const threadView = document.getElementById("threadView");
-const tvContent = document.getElementById("tvContent");
-const tvTitle = document.getElementById("tvTitle");
-const tvCount = document.getElementById("tvCount");
-const tvDesc = document.getElementById("tvDesc");
-const tvTA = document.getElementById("tvTextarea");
-const zoomLbl = document.getElementById("zoomLbl");
-const syncDot = document.getElementById("syncDot");
+const tvContent  = document.getElementById("tvContent");
+const tvTitle    = document.getElementById("tvTitle");
+const tvCount    = document.getElementById("tvCount");
+const tvDesc     = document.getElementById("tvDesc");
+const tvTA       = document.getElementById("tvTextarea");
+const zoomLbl    = document.getElementById("zoomLbl");
+const syncDot    = document.getElementById("syncDot");
 
-// ── Helpers ───────────────────────────────────
-const pad = n => String(n).padStart(2,"0");
-const uid6 = () => Math.random().toString(36).slice(2,8).toUpperCase();
+// ── Helpers ───────────────────────────────────────────
+const pad    = n => String(n).padStart(2,"0");
+const uid6   = () => Math.random().toString(36).slice(2,8).toUpperCase();
 function hash8(s){ let h=0; for(const c of s) h=(Math.imul(31,h)+c.charCodeAt(0))|0; return Math.abs(h).toString(36).slice(0,8).toUpperCase(); }
-function fmtISO(iso){
-  const d=new Date(iso);
-  return `${d.getFullYear()}/${pad(d.getMonth()+1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
-}
+function fmtISO(iso){ const d=new Date(iso); return `${d.getFullYear()}/${pad(d.getMonth()+1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`; }
 function fmtText(t){
   return t.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
     .replace(/(>>(\d+))/g,(_,m,n)=>`<span class="anc" onclick="scrollPost(${n})">${m}</span>`)
@@ -376,19 +475,16 @@ function fmtText(t){
 function scrollPost(n){ const els=tvContent.querySelectorAll(".post"); if(els[n-1]) els[n-1].scrollIntoView({behavior:"smooth"}); }
 function setSyncStatus(cls,msg){ syncDot.className=cls; syncDot.textContent=msg; }
 
-// ── Theme ─────────────────────────────────────
-function applyTheme(){
-  document.body.classList.toggle("light",!isDark);
-  document.getElementById("btnTheme").textContent = isDark ? "🌙 ダーク" : "☀ ライト";
-}
-document.getElementById("btnTheme").onclick = () => { isDark=!isDark; applyTheme(); };
+// ── Theme ─────────────────────────────────────────────
+function applyTheme(){ document.body.classList.toggle("light",!isDark); document.getElementById("btnTheme").textContent=isDark?"🌙 ダーク":"☀ ライト"; }
+document.getElementById("btnTheme").onclick=()=>{ isDark=!isDark; applyTheme(); };
 
-// ── Palette toggle ────────────────────────────
-document.getElementById("paletteToggle").onclick = () => palette.classList.toggle("collapsed");
+// ── Palette toggle ────────────────────────────────────
+document.getElementById("paletteToggle").onclick=()=>palette.classList.toggle("collapsed");
 
-// ── Zoom & Pan ────────────────────────────────
+// ── Zoom & Pan ────────────────────────────────────────
 function setTF(){ cv.style.transform=`translate(${ox}px,${oy}px) scale(${scale})`; zoomLbl.textContent=Math.round(scale*100)+"%"; }
-function zoom(cx,cy,f){ const r=cv.getBoundingClientRect(); ox-=(cx-r.left)*(f-1); oy-=(cy-r.top)*(f-1); scale=Math.max(0.15,Math.min(4,scale*f)); setTF(); }
+function zoom(cx2,cy2,f){ const r=cv.getBoundingClientRect(); ox-=(cx2-r.left)*(f-1); oy-=(cy2-r.top)*(f-1); scale=Math.max(0.1,Math.min(4,scale*f)); setTF(); }
 vp.addEventListener("wheel",e=>{e.preventDefault();zoom(e.clientX,e.clientY,e.deltaY<0?1.05:0.95);},{passive:false});
 function holdZ(id,f){ const b=document.getElementById(id); let iv; b.addEventListener("mousedown",()=>{iv=setInterval(()=>zoom(window.innerWidth/2,window.innerHeight/2,f),50);}); ["mouseup","mouseleave"].forEach(ev=>b.addEventListener(ev,()=>clearInterval(iv))); }
 holdZ("zIn",1.05); holdZ("zOut",0.95);
@@ -396,7 +492,7 @@ holdZ("zIn",1.05); holdZ("zOut",0.95);
 vp.addEventListener("mousedown",e=>{
   if(inputBox.style.display==="block"||threadView.classList.contains("open")) return;
   const cls=e.target.classList;
-  if(e.target===cv||cls.contains("note")||cls.contains("note-text")||cls.contains("note-author")){
+  if(e.target===cv||cls.contains("note")||cls.contains("note-text")||cls.contains("note-author")||cls.contains("score-img-wrap")){
     panning=true; panSX=e.clientX-ox; panSY=e.clientY-oy;
   }
 });
@@ -405,15 +501,16 @@ document.addEventListener("mouseup",()=>{ panning=false; });
 
 cv.addEventListener("mousedown",e=>{mdX=e.clientX;mdY=e.clientY;mdT=Date.now();});
 cv.addEventListener("mouseup",e=>{
+  if(placingMode) return; // 配置モード中は付箋作成を無効化
   if(inputBox.style.display==="block"||justClosed||e.target!==cv) return;
   if(Math.abs(e.clientX-mdX)>5||Math.abs(e.clientY-mdY)>5||Date.now()-mdT>400) return;
   const r=cv.getBoundingClientRect();
   openIB(e.clientX,e.clientY,(e.clientX-r.left)/scale,(e.clientY-r.top)/scale);
 });
 
-// ── Input Box ─────────────────────────────────
-function openIB(sx,sy,cx,cy,mode="note",el=null,id=null){
-  ibMode=mode; ibNoteEl=el; ibNoteId=id; ibCX=cx; ibCY=cy;
+// ── Note Input ────────────────────────────────────────
+function openIB(sx,sy,cx2,cy2,mode="note",el=null,id=null){
+  ibMode=mode; ibNoteEl=el; ibNoteId=id; ibCX=cx2; ibCY=cy2;
   document.getElementById("ibMode").textContent=mode==="note"?"📝 新しい付箋":"↩ 返信を追加";
   document.getElementById("ibCL").style.display=mode==="note"?"":"none";
   ibColor.style.display=mode==="note"?"":"none";
@@ -423,11 +520,30 @@ function openIB(sx,sy,cx,cy,mode="note",el=null,id=null){
   inputBox.style.top=Math.min(sy,window.innerHeight-230)+"px";
   setTimeout(()=>ibText.focus(),30);
 }
-function closeIB(){ const v=ibText.value.trim(); if(v)(ibMode==="note"?draftN:draftR).push(v); inputBox.style.display="none"; justClosed=true; setTimeout(()=>justClosed=false,150); }
+function closeIB(){ const v=ibText.value.trim(); if(v)(ibMode==="note"?draftN:draftR).push(v); inputBox.style.display="none"; pendingPin=null; justClosed=true; setTimeout(()=>justClosed=false,150); }
 document.getElementById("ibOk").onclick=async()=>{
   const text=ibText.value.trim(),name=ibName.value.trim()||"名無し"; if(!text) return;
-  if(ibMode==="note"){ await sb.from("notes").insert({text,author:name,color:ibColor.value,x:ibCX,y:ibCY}); draftN.length=0; }
-  else { await sb.from("replies").insert({note_id:ibNoteId,text,author:name}); draftR.length=0; }
+  if(ibMode==="note"){
+    const insertData={text,author:name,color:ibColor.value,x:ibCX,y:ibCY};
+    if(pendingPin){ insertData.pin_x=pendingPin.pin_x; insertData.pin_y=pendingPin.pin_y; }
+    const {data:inserted, error}=await sb.from("notes").insert(insertData).select().single();
+    if(error){ alert("付箋の作成に失敗しました: "+error.message); return; }
+    if(inserted){
+      // Realtimeを待たず即座に表示
+      renderNote(inserted);
+      if(pendingPin){
+        notePins[inserted.id]={pin_x:pendingPin.pin_x, pin_y:pendingPin.pin_y};
+        // DOMが確定してから矢印描画
+        setTimeout(()=>drawArrow(inserted.id),150);
+      }
+    }
+    pendingPin=null;
+    draftN.length=0;
+  } else {
+    const {data:inserted}=await sb.from("replies").insert({note_id:ibNoteId,text,author:name}).select().single();
+    if(inserted) renderReply(inserted);
+    draftR.length=0;
+  }
   inputBox.style.display="none"; justClosed=true; setTimeout(()=>justClosed=false,150);
 };
 document.getElementById("ibCancel").onclick=e=>{e.stopPropagation();closeIB();};
@@ -437,12 +553,12 @@ document.getElementById("btnNote").onclick=()=>{
   openIB(window.innerWidth/2-115,window.innerHeight/2-115,(-ox+window.innerWidth/2)/scale,(-oy+window.innerHeight/2)/scale);
 };
 
-// ── Draggable ─────────────────────────────────
+// ── Draggable ─────────────────────────────────────────
 function mkDrag(el,stop,onEnd){
   let dx,dy,nx,ny,drag=false;
   el.addEventListener("mousedown",e=>{
     if(["BUTTON","SELECT","INPUT","TEXTAREA"].includes(e.target.tagName)) return;
-    if(e.target.classList.contains("reply-btn")||e.target.classList.contains("toggle-btn")) return;
+    if(e.target.classList.contains("reply-btn")||e.target.classList.contains("toggle-btn")||e.target.classList.contains("score-img-resize")) return;
     if(stop) e.stopPropagation();
     drag=true; panning=false;
     dx=e.clientX; dy=e.clientY;
@@ -453,15 +569,73 @@ function mkDrag(el,stop,onEnd){
   document.addEventListener("mouseup",()=>{ if(drag){drag=false;el.style.cursor="grab";el.style.zIndex="";if(onEnd)onEnd(parseFloat(el.style.left),parseFloat(el.style.top));} });
 }
 
-// ── Render Note ───────────────────────────────
+// ── Arrow SVG layer ───────────────────────────────────
+const arrowLayer = document.getElementById("arrowLayer");
+
+// 付箋のpin情報: noteId -> {pin_x, pin_y} (キャンバス座標)
+const notePins = {}; // noteId -> {pin_x, pin_y}
+const arrowEls = {}; // noteId -> {line, dot}
+
+function drawArrow(noteId){
+  const pin = notePins[noteId];
+  const noteEl = noteEls[noteId];
+  if(!pin || !noteEl) return;
+
+  // 既存の矢印を削除
+  if(arrowEls[noteId]){
+    arrowEls[noteId].line.remove();
+    arrowEls[noteId].dot.remove();
+  }
+
+  // 付箋の中心座標
+  const nx = parseFloat(noteEl.style.left) + (noteEl.offsetWidth||180)/2;
+  const ny = parseFloat(noteEl.style.top)  + (noteEl.offsetHeight||80)/2;
+
+  const line = document.createElementNS("http://www.w3.org/2000/svg","line");
+  line.setAttribute("x1", pin.pin_x);
+  line.setAttribute("y1", pin.pin_y);
+  line.setAttribute("x2", nx);
+  line.setAttribute("y2", ny);
+  line.setAttribute("class","arrow-line");
+  line.setAttribute("marker-end","url(#arrowHead)");
+
+  const dot = document.createElementNS("http://www.w3.org/2000/svg","circle");
+  dot.setAttribute("cx", pin.pin_x);
+  dot.setAttribute("cy", pin.pin_y);
+  dot.setAttribute("r","5");
+  dot.setAttribute("class","arrow-dot");
+
+  arrowLayer.appendChild(line);
+  arrowLayer.appendChild(dot);
+  arrowEls[noteId] = {line, dot};
+}
+
+function removeArrow(noteId){
+  if(arrowEls[noteId]){
+    arrowEls[noteId].line.remove();
+    arrowEls[noteId].dot.remove();
+    delete arrowEls[noteId];
+  }
+  delete notePins[noteId];
+}
+
+// 付箋移動後に矢印を再描画
+function refreshArrow(noteId){ if(notePins[noteId]) drawArrow(noteId); }
+
+// ── Render Note ───────────────────────────────────────
 function renderNote(row){
   if(noteEls[row.id]) return;
-  const el=document.createElement("div");
-  el.className="note"; el.dataset.id=row.id;
+  const el=document.createElement("div"); el.className="note"; el.dataset.id=row.id;
   el.style.cssText=`background:${row.color};left:${row.x}px;top:${row.y}px`;
 
   const db=document.createElement("button"); db.className="note-del"; db.textContent="✕";
-  db.onclick=async e=>{e.stopPropagation();if(confirm("削除しますか？"))await sb.from("notes").delete().eq("id",row.id);};
+  db.onclick=async e=>{
+    e.stopPropagation();
+    if(confirm("この付箋を削除しますか？")){
+      removeArrow(row.id);
+      await sb.from("notes").delete().eq("id",row.id);
+    }
+  };
 
   const nt=document.createElement("div"); nt.className="note-text"; nt.textContent=row.text;
   const na=document.createElement("div"); na.className="note-author"; na.textContent="— "+row.author;
@@ -473,7 +647,18 @@ function renderNote(row){
   tb.onclick=e=>{ e.stopPropagation(); const v=rw.style.display!=="none"; rw.style.display=v?"none":"block"; tb.textContent=v?"▶ 返信を表示":"▼ 返信を隠す"; };
 
   el.append(db,nt,na,rb,tb,rw);
-  mkDrag(el,true,async(nx2,ny2)=>{ await sb.from("notes").update({x:nx2,y:ny2}).eq("id",row.id); });
+
+  // ピン情報があれば矢印を描画
+  if(row.pin_x!=null && row.pin_y!=null){
+    notePins[row.id]={pin_x:row.pin_x, pin_y:row.pin_y};
+    // 画像ロード後に描画するため少し遅延
+    setTimeout(()=>drawArrow(row.id),100);
+  }
+
+  mkDrag(el,true,async(nx2,ny2)=>{
+    await sb.from("notes").update({x:nx2,y:ny2}).eq("id",row.id);
+    refreshArrow(row.id);
+  });
   cv.appendChild(el);
   noteEls[row.id]=el;
 }
@@ -490,7 +675,349 @@ function renderReply(row){
   rw.style.display="block"; tb.style.display="block"; tb.textContent="▼ 返信を隠す";
 }
 
-// ── Palette ───────────────────────────────────
+// ── Render Score Image ────────────────────────────────
+// 画像クリックで付箋を打つモード
+let pinImgMode = false;  // 画像ピンモード中か
+let pinImgId   = null;   // 対象画像ID
+
+function enterPinImgMode(imgId){
+  pinImgMode=true; pinImgId=imgId;
+  // 対象画像にクラスを付与
+  Object.values(imgEls).forEach(w=>w.classList.remove("pin-mode"));
+  if(imgEls[imgId]) imgEls[imgId].classList.add("pin-mode");
+  // バナー表示
+  let b=document.getElementById("pinBanner");
+  if(!b){
+    b=document.createElement("div"); b.id="pinBanner";
+    b.style.cssText="position:fixed;top:52px;left:50%;transform:translateX(-50%);z-index:800;"+
+      "background:#5a8;color:#fff;padding:8px 20px;border-radius:6px;"+
+      "font-size:12px;font-weight:700;pointer-events:none;box-shadow:0 4px 16px rgba(0,0,0,0.4);";
+    document.body.appendChild(b);
+  }
+  b.textContent="📍 画像上のクリックした場所に付箋を固定します　ESCでキャンセル";
+  b.style.display="block";
+}
+function exitPinImgMode(){
+  pinImgMode=false; pinImgId=null;
+  Object.values(imgEls).forEach(w=>w.classList.remove("pin-mode"));
+  const b=document.getElementById("pinBanner"); if(b) b.style.display="none";
+}
+// ※ ESCキーハンドラはuploadFilesセクションに一本化済み
+
+// 画像の矩形を取得（キャンバス座標）
+function getImgRect(imgId){
+  const row_x = parseFloat(imgEls[imgId]?.style.left)||0;
+  const row_y = parseFloat(imgEls[imgId]?.style.top)||0;
+  const row_w = parseFloat(imgEls[imgId]?.style.width)||IMG_WIDTH;
+  const img   = imgEls[imgId]?.querySelector("img");
+  const row_h = img ? img.offsetHeight : 400;
+  return {x:row_x, y:row_y, w:row_w, h:row_h};
+}
+
+// 付箋が画像に重ならない位置を計算（上 or 下）
+function calcNotePos(pinX, pinY, imgId){
+  const NOTE_W=180, NOTE_H=100, MARGIN=20;
+  const rect=getImgRect(imgId);
+  const noteX=Math.max(rect.x, Math.min(pinX - NOTE_W/2, rect.x+rect.w-NOTE_W));
+  // 上に置けるか
+  if(rect.y - NOTE_H - MARGIN > 0){
+    return {x:noteX, y:rect.y - NOTE_H - MARGIN};
+  }
+  // 下に置く
+  return {x:noteX, y:rect.y + rect.h + MARGIN};
+}
+
+function renderScoreImg(row){
+  if(imgEls[row.id]) return;
+  const wrap=document.createElement("div");
+  wrap.className="score-img-wrap"; wrap.dataset.imgid=row.id;
+  wrap.style.cssText=`left:${row.x}px;top:${row.y}px;width:${row.width}px;`;
+
+  const img=document.createElement("img");
+  img.src=row.url; img.style.width="100%"; img.draggable=false;
+  img.style.borderRadius="4px";
+  img.style.boxShadow="0 4px 24px rgba(0,0,0,0.6)";
+
+  const lbl=document.createElement("div");
+  lbl.className="score-img-label"; lbl.textContent=row.label||"";
+
+  // 📍 ピンボタン
+  const pb=document.createElement("button"); pb.className="score-img-pin";
+  pb.textContent="📍"; pb.title="クリックして付箋を固定";
+  pb.onclick=e=>{
+    e.stopPropagation();
+    if(pinImgMode && pinImgId===row.id){ exitPinImgMode(); return; }
+    enterPinImgMode(row.id);
+  };
+
+  // 削除ボタン
+  const db=document.createElement("button"); db.className="score-img-del"; db.textContent="✕";
+  db.onclick=async e=>{
+    e.stopPropagation();
+    if(!confirm("この画像を削除しますか？")) return;
+    const path=row.url.split("/"+BUCKET+"/")[1];
+    await sb.storage.from(BUCKET).remove([path]);
+    await sb.from("canvas_images").delete().eq("id",row.id);
+  };
+
+  // リサイズハンドル
+  const rh=document.createElement("div"); rh.className="score-img-resize";
+  rh.title="ドラッグでリサイズ";
+  let resizing=false,rStartX,rStartW;
+  rh.addEventListener("mousedown",e=>{
+    e.stopPropagation(); resizing=true; panning=false;
+    rStartX=e.clientX; rStartW=parseFloat(wrap.style.width)||row.width;
+    document.body.style.cursor="se-resize";
+  });
+  document.addEventListener("mousemove",e=>{ if(!resizing) return; wrap.style.width=Math.max(200,rStartW+(e.clientX-rStartX)/scale)+"px"; });
+  document.addEventListener("mouseup",async()=>{
+    if(resizing){ resizing=false; document.body.style.cursor=""; await sb.from("canvas_images").update({width:parseFloat(wrap.style.width)}).eq("id",row.id); }
+  });
+
+  // 画像クリック → ピンモード中なら付箋を作成
+  img.addEventListener("click",async e=>{
+    if(!pinImgMode||pinImgId!==row.id) return;
+    e.stopPropagation();
+    // キャンバス座標でクリック位置を計算
+    const r=cv.getBoundingClientRect();
+    const pinX=(e.clientX-r.left)/scale;
+    const pinY=(e.clientY-r.top)/scale;
+    // 付箋の配置位置を計算（画像と重ならない）
+    const notePos=calcNotePos(pinX,pinY,row.id);
+    exitPinImgMode();
+    // 付箋作成ダイアログを開く（ピン座標を持たせる）
+    pendingPin={pin_x:pinX, pin_y:pinY};
+    openIB(e.clientX, e.clientY, notePos.x, notePos.y);
+  });
+
+  wrap.append(pb,db,img,lbl,rh);
+  mkDrag(wrap,true,async(nx2,ny2)=>{
+    await sb.from("canvas_images").update({x:nx2,y:ny2}).eq("id",row.id);
+    // 付箋の矢印を全部再描画
+    Object.keys(notePins).forEach(drawArrow);
+  });
+  cv.appendChild(wrap);
+  imgEls[row.id]=wrap;
+}
+
+// ── Image Upload ──────────────────────────────────────
+let pendingImgUrls = [];
+let placingMode = false;
+let layoutMode = "h"; // "h"=横一列 / "v"=縦一列 / "free"=手動配置
+
+// レイアウト選択
+function setLayout(mode){
+  layoutMode=mode;
+  ["H","V","Free"].forEach(m=>{
+    const b=document.getElementById("layout"+m);
+    if(b) b.classList.toggle("on", "layout"+m === "layout"+mode.charAt(0).toUpperCase()+mode.slice(1)
+      || ("layout"+m.toLowerCase())==="layout"+mode );
+  });
+  // 簡略化: 全外してから対象だけON
+  document.querySelectorAll(".layout-btn").forEach(b=>b.classList.remove("on"));
+  const map={h:"layoutH",v:"layoutV",free:"layoutFree"};
+  if(document.getElementById(map[mode])) document.getElementById(map[mode]).classList.add("on");
+}
+
+function enterPlacingMode(){
+  if(pendingImgUrls.length===0) return;
+  placingMode=true;
+  vp.style.cursor="crosshair";
+  showPlacingBanner();
+}
+function exitPlacingMode(){
+  placingMode=false;
+  vp.style.cursor="";
+  hidePlacingBanner();
+}
+
+function showPlacingBanner(){
+  let b=document.getElementById("placingBanner");
+  if(!b){
+    b=document.createElement("div"); b.id="placingBanner";
+    b.style.cssText="position:fixed;top:52px;left:50%;transform:translateX(-50%);z-index:1200;"+
+      "background:var(--accent);color:#000;padding:8px 20px;border-radius:6px;"+
+      "font-size:12px;font-weight:700;pointer-events:none;box-shadow:0 4px 16px rgba(0,0,0,0.4);";
+    document.body.appendChild(b);
+  }
+  b.textContent=`📍 クリックして画像を配置（残り ${pendingImgUrls.length} 枚）　ESCでキャンセル`;
+  b.style.display="block";
+}
+function hidePlacingBanner(){ const b=document.getElementById("placingBanner"); if(b) b.style.display="none"; }
+
+// ESCでキャンセル（keydownはrenderScoreImg内のexitPinImgModeと統合）
+document.addEventListener("keydown",e=>{
+  if(e.key==="Escape"){
+    if(pinImgMode) exitPinImgMode();
+    if(placingMode) exitPlacingMode();
+  }
+});
+
+// キャンバスクリック → 手動配置モードのみここで処理
+vp.addEventListener("click",async e=>{
+  if(!placingMode||pendingImgUrls.length===0) return;
+  if(e.target.closest(".mbg")||e.target.closest("#inputBox")||e.target.closest("#topBar")||e.target.closest("#palette")) return;
+
+  e.stopPropagation();
+  e.preventDefault();
+
+  const r=cv.getBoundingClientRect();
+  const cx2=(e.clientX-r.left)/scale;
+  const cy2=(e.clientY-r.top)/scale;
+
+  const item=pendingImgUrls.shift();
+  const {data:inserted,error:insErr}=await sb.from("canvas_images").insert({
+    url:item.url, x:cx2, y:cy2, width:IMG_WIDTH
+  }).select().single();
+
+  if(insErr){
+    alert("画像の配置に失敗しました:\n"+insErr.message);
+    pendingImgUrls.unshift(item);
+    return;
+  }
+  if(inserted) renderScoreImg(inserted);
+
+  if(pendingImgUrls.length>0){ showPlacingBanner(); }
+  else { exitPlacingMode(); }
+});
+
+// 自動配置（横/縦一列）
+async function autoArrange(urls){
+  const GAP=30;
+  // 現在の画像の最大端を取得して続きに並べる
+  const {data:existing}=await sb.from("canvas_images").select("x,y,width").order("created_at",{ascending:true});
+  let startX=60, startY=60;
+  if(existing && existing.length>0){
+    if(layoutMode==="h"){
+      startX=existing.reduce((m,r)=>Math.max(m,r.x+(r.width||IMG_WIDTH)),0)+GAP;
+    } else {
+      // 縦: 最大のy+高さを推定（DBに高さがないので近似値300px）
+      startY=existing.reduce((m,r)=>Math.max(m,r.y+300),0)+GAP;
+    }
+  }
+
+  for(let i=0;i<urls.length;i++){
+    const item=urls[i];
+    let x=startX, y=startY;
+    if(layoutMode==="h"){ x=startX+(IMG_WIDTH+GAP)*i; }
+    else               { y=startY+(IMG_WIDTH*1.4+GAP)*i; } // 楽譜は縦長想定
+
+    const {data:inserted,error}=await sb.from("canvas_images").insert({
+      url:item.url, x, y, width:IMG_WIDTH
+    }).select().single();
+    if(error){ alert("配置失敗: "+error.message); continue; }
+    if(inserted) renderScoreImg(inserted);
+  }
+}
+
+async function uploadFiles(files){
+  const prog=document.getElementById("uploadProgress");
+  const bar=document.getElementById("uploadProgressBar");
+  const status=document.getElementById("uploadStatus");
+  prog.style.display="block"; status.style.display="block";
+  pendingImgUrls=[];
+
+  // レイアウト選択UIを表示（複数枚のとき）
+  const layoutSel=document.getElementById("layoutSelect");
+  if(layoutSel) layoutSel.style.display=files.length>1?"block":"none";
+
+  for(let i=0;i<files.length;i++){
+    const file=files[i];
+    status.textContent=`アップロード中... ${i+1}/${files.length}：${file.name}`;
+    bar.style.width=Math.round(((i+0.5)/files.length)*100)+"%";
+
+    const ext=file.name.split(".").pop();
+    const fname=`score_${Date.now()}_${i}_${Math.random().toString(36).slice(2,5)}.${ext}`;
+
+    const {error:upErr}=await sb.storage.from(BUCKET).upload(fname,file,{contentType:file.type});
+    if(upErr){
+      status.textContent=`❌ アップロード失敗：${file.name} — ${upErr.message}`;
+      await new Promise(r=>setTimeout(r,2000));
+      continue;
+    }
+
+    const {data:urlData}=sb.storage.from(BUCKET).getPublicUrl(fname);
+    const label=file.name.replace(/\.[^/.]+$/,"");
+    pendingImgUrls.push({url:urlData.publicUrl, label});
+  }
+
+  bar.style.width="100%";
+  const uploaded=pendingImgUrls.length;
+
+  if(uploaded===0){
+    status.textContent="❌ アップロードできたファイルがありません";
+    return;
+  }
+
+  if(files.length===1){
+    // 1枚は手動配置
+    status.textContent=`✅ アップロード完了！キャンバス上をクリックして配置してください`;
+    setTimeout(()=>{
+      prog.style.display="none"; bar.style.width="0%";
+      document.getElementById("uploadModal").classList.remove("open");
+      status.style.display="none";
+      enterPlacingMode();
+    },1000);
+  } else {
+    // 複数枚 → レイアウト選択後に確定ボタン
+    status.textContent=`✅ ${uploaded}枚アップロード完了！並べ方を選んで「配置する」を押してください`;
+    prog.style.display="none"; bar.style.width="0%";
+
+    // 「配置する」ボタンを追加
+    let arrangeBtn=document.getElementById("arrangeBtn");
+    if(!arrangeBtn){
+      arrangeBtn=document.createElement("button");
+      arrangeBtn.id="arrangeBtn"; arrangeBtn.className="mpri";
+      arrangeBtn.style.cssText="width:100%;padding:8px;margin-top:8px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;background:var(--accent);color:#000;border:none;";
+      document.getElementById("uploadModal").querySelector(".mr").before(arrangeBtn);
+    }
+    arrangeBtn.textContent=`📐 ${uploaded}枚をまとめて配置する`;
+    arrangeBtn.style.display="block";
+    arrangeBtn.onclick=async()=>{
+      arrangeBtn.disabled=true; arrangeBtn.textContent="配置中...";
+      const toArrange=[...pendingImgUrls];
+      pendingImgUrls=[];
+      if(layoutMode==="free"){
+        // 手動配置モードへ
+        pendingImgUrls=toArrange;
+        document.getElementById("uploadModal").classList.remove("open");
+        arrangeBtn.style.display="none";
+        document.getElementById("layoutSelect").style.display="none";
+        document.getElementById("uploadStatus").style.display="none";
+        enterPlacingMode();
+      } else {
+        await autoArrange(toArrange);
+        document.getElementById("uploadModal").classList.remove("open");
+        arrangeBtn.style.display="none";
+        document.getElementById("layoutSelect").style.display="none";
+        document.getElementById("uploadStatus").style.display="none";
+      }
+      arrangeBtn.disabled=false;
+    };
+  }
+}
+
+// Drop Zone
+const dropZone=document.getElementById("dropZone");
+const fileInput=document.getElementById("fileInput");
+dropZone.onclick=()=>fileInput.click();
+fileInput.onchange=e=>{
+  const files=Array.from(e.target.files);
+  if(files.length) uploadFiles(files);
+  fileInput.value="";
+};
+dropZone.addEventListener("dragover",e=>{e.preventDefault();dropZone.classList.add("drag");});
+dropZone.addEventListener("dragleave",()=>dropZone.classList.remove("drag"));
+dropZone.addEventListener("drop",e=>{
+  e.preventDefault(); dropZone.classList.remove("drag");
+  const files=Array.from(e.dataTransfer.files);
+  if(files.length) uploadFiles(files);
+});
+
+document.getElementById("btnUpload").onclick=()=>document.getElementById("uploadModal").classList.add("open");
+document.getElementById("uploadCancel").onclick=()=>document.getElementById("uploadModal").classList.remove("open");
+
+// ── Palette ───────────────────────────────────────────
 function addPItem(row){
   if(document.querySelector(`.pitem[data-tid="${row.id}"]`)) return;
   pEmpty.style.display="none";
@@ -508,26 +1035,21 @@ function addPItem(row){
 function removePItem(id){ const el=document.querySelector(`.pitem[data-tid="${id}"]`); if(el) el.remove(); if(!pList.querySelector(".pitem")) pEmpty.style.display="block"; }
 async function refreshMeta(tid){ const m=pList.querySelector(`[data-mtid="${tid}"]`); if(!m) return; const {count}=await sb.from("posts").select("id",{count:"exact",head:true}).eq("thread_id",tid); if(m) m.textContent=(count||0)+" レス"; }
 
-// ── Thread view ───────────────────────────────
+// ── Thread View ───────────────────────────────────────
 async function openThread(id,title,desc){
   curThread=id; curPosts=[];
   tvTitle.textContent="【"+title+"】"; tvDesc.textContent=desc;
   tvContent.innerHTML='<div style="padding:20px;text-align:center;font-size:12px;color:var(--text3)">読み込み中...</div>';
   threadView.classList.add("open"); tvTA.value="";
-
   const {data}=await sb.from("posts").select("*").eq("thread_id",id).order("created_at",{ascending:true});
-  curPosts=data||[];
-  renderTV();
-  subscribeThread(id);
+  curPosts=data||[]; renderTV(); subscribeThread(id);
 }
-
 function renderTV(){
   tvCount.textContent=curPosts.length+" レス";
   tvContent.innerHTML="";
   curPosts.forEach((p,i)=>tvContent.appendChild(buildPost(p,i+1)));
   tvContent.scrollTop=tvContent.scrollHeight;
 }
-
 function buildPost(p,num){
   const w=document.createElement("div"); w.className="post"; w.dataset.pid=p.id;
   const n=document.createElement("div"); n.className="pnum"; n.textContent=num;
@@ -543,11 +1065,9 @@ function buildPost(p,num){
   db.onclick=async()=>{ if(!confirm("削除しますか？")) return; await sb.from("posts").delete().eq("id",p.id); };
   dw.appendChild(db); b.append(h,tx); w.append(n,b,dw); return w;
 }
-
 document.getElementById("tvBack").onclick=()=>{ threadView.classList.remove("open"); unsubThread(); curThread=null; };
 document.getElementById("tvSubmit").onclick=postSubmit;
 tvTA.addEventListener("keydown",e=>{ if(e.shiftKey&&e.key==="Enter"){e.preventDefault();postSubmit();} });
-
 async function postSubmit(){
   if(!curThread) return;
   const content=tvTA.value.trim(); if(!content) return;
@@ -558,7 +1078,7 @@ async function postSubmit(){
   tvTA.value=""; refreshMeta(curThread);
 }
 
-// ── Realtime ──────────────────────────────────
+// ── Realtime ──────────────────────────────────────────
 function subscribeThread(tid){
   unsubThread();
   rtThreadCh=sb.channel("t_"+tid)
@@ -580,16 +1100,23 @@ function unsubThread(){ if(rtThreadCh){sb.removeChannel(rtThreadCh);rtThreadCh=n
 function subscribeGlobal(){
   sb.channel("global")
     .on("postgres_changes",{event:"INSERT",schema:"public",table:"notes"},p=>renderNote(p.new))
-    .on("postgres_changes",{event:"DELETE",schema:"public",table:"notes"},p=>{ const el=noteEls[p.old.id]; if(el){el.remove();delete noteEls[p.old.id];} })
-    .on("postgres_changes",{event:"UPDATE",schema:"public",table:"notes"},p=>{ const el=noteEls[p.new.id]; if(el){el.style.left=p.new.x+"px";el.style.top=p.new.y+"px";} })
+    .on("postgres_changes",{event:"DELETE",schema:"public",table:"notes"},p=>{ const el=noteEls[p.old.id]; if(el){el.remove();delete noteEls[p.old.id];} removeArrow(p.old.id); })
+    .on("postgres_changes",{event:"UPDATE",schema:"public",table:"notes"},p=>{ const el=noteEls[p.new.id]; if(el){el.style.left=p.new.x+"px";el.style.top=p.new.y+"px"; refreshArrow(p.new.id);} })
     .on("postgres_changes",{event:"INSERT",schema:"public",table:"replies"},p=>renderReply(p.new))
     .on("postgres_changes",{event:"DELETE",schema:"public",table:"replies"},p=>{ const el=document.querySelector(`[data-rid="${p.old.id}"]`); if(el)el.remove(); })
     .on("postgres_changes",{event:"INSERT",schema:"public",table:"threads"},p=>addPItem(p.new))
     .on("postgres_changes",{event:"DELETE",schema:"public",table:"threads"},p=>removePItem(p.old.id))
+    // canvas_images
+    .on("postgres_changes",{event:"INSERT",schema:"public",table:"canvas_images"},p=>renderScoreImg(p.new))
+    .on("postgres_changes",{event:"DELETE",schema:"public",table:"canvas_images"},p=>{ const el=imgEls[p.old.id]; if(el){el.remove();delete imgEls[p.old.id];} })
+    .on("postgres_changes",{event:"UPDATE",schema:"public",table:"canvas_images"},p=>{
+      const el=imgEls[p.new.id];
+      if(el){ el.style.left=p.new.x+"px"; el.style.top=p.new.y+"px"; el.style.width=p.new.width+"px"; }
+    })
     .subscribe(s=>{ setSyncStatus(s==="SUBSCRIBED"?"ok":"err",s==="SUBSCRIBED"?"🟢 同期中":"🔴 切断"); });
 }
 
-// ── Thread creation ───────────────────────────
+// ── Thread / Score modals ─────────────────────────────
 document.getElementById("btnThread").onclick=()=>{ document.getElementById("threadModal").classList.add("open"); setTimeout(()=>document.getElementById("tmTitle").focus(),50); };
 document.getElementById("tmCancel").onclick=()=>document.getElementById("threadModal").classList.remove("open");
 document.getElementById("tmOk").onclick=async()=>{
@@ -599,8 +1126,11 @@ document.getElementById("tmOk").onclick=async()=>{
   document.getElementById("tmTitle").value=""; document.getElementById("tmDesc").value="";
   document.getElementById("threadModal").classList.remove("open");
 };
+document.getElementById("btnScore").onclick=()=>document.getElementById("scoreModal").classList.add("open");
+document.getElementById("scoreClose").onclick=()=>document.getElementById("scoreModal").classList.remove("open");
+document.getElementById("scoreModal").addEventListener("click",e=>{if(e.target===document.getElementById("scoreModal"))document.getElementById("scoreModal").classList.remove("open");});
 
-// ── Admin ─────────────────────────────────────
+// ── Admin ─────────────────────────────────────────────
 document.getElementById("btnAdmin").onclick=()=>{
   if(isAdmin){ isAdmin=false; document.body.classList.remove("admin-mode"); document.getElementById("adminBadge").style.display="none"; document.getElementById("btnAdmin").classList.remove("on"); return; }
   document.getElementById("pwModal").classList.add("open");
@@ -618,24 +1148,21 @@ document.getElementById("pwOk").onclick=()=>{
 document.getElementById("pwCancel").onclick=()=>document.getElementById("pwModal").classList.remove("open");
 document.getElementById("pwIn").addEventListener("keydown",e=>{if(e.key==="Enter")document.getElementById("pwOk").click();});
 
-// ── Score ─────────────────────────────────────
-document.getElementById("btnScore").onclick=()=>document.getElementById("scoreModal").classList.add("open");
-document.getElementById("scoreClose").onclick=()=>document.getElementById("scoreModal").classList.remove("open");
-document.getElementById("scoreModal").addEventListener("click",e=>{if(e.target===document.getElementById("scoreModal"))document.getElementById("scoreModal").classList.remove("open");});
-
-// ── Init ──────────────────────────────────────
+// ── Init ──────────────────────────────────────────────
 async function init(){
   setSyncStatus("","接続中...");
   try{
-    const [n,r,t]= await Promise.all([
+    const [n,r,t,imgs]=await Promise.all([
       sb.from("notes").select("*").order("created_at",{ascending:true}),
       sb.from("replies").select("*").order("created_at",{ascending:true}),
-      sb.from("threads").select("*").order("created_at",{ascending:true})
+      sb.from("threads").select("*").order("created_at",{ascending:true}),
+      sb.from("canvas_images").select("*").order("created_at",{ascending:true})
     ]);
-    if(n.error||r.error||t.error) throw n.error||r.error||t.error;
+    if(n.error||r.error||t.error||imgs.error) throw n.error||r.error||t.error||imgs.error;
     (n.data||[]).forEach(renderNote);
     (r.data||[]).forEach(renderReply);
     (t.data||[]).forEach(addPItem);
+    (imgs.data||[]).forEach(renderScoreImg);
     subscribeGlobal();
     applyTheme();
     document.getElementById("loadOver").classList.add("hide");
