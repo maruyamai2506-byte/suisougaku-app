@@ -277,6 +277,7 @@ body.admin-mode .pdel{display:block;}
   <button class="tbtn" id="btnTheme">🌙 ダーク</button>
   <button class="tbtn" id="btnAdmin">🔑 管理者</button>
   <div id="adminBadge">ADMIN</div>
+  <button class="tbtn" id="btnClearImgs" style="display:none;border-color:var(--danger);color:var(--danger);">🗑 画像全消去</button>
   <div id="sp"></div>
   <div id="syncDot">接続中...</div>
   <div id="zoomLbl">100%</div>
@@ -286,13 +287,7 @@ body.admin-mode .pdel{display:block;}
 
 <div id="viewport">
   <div id="canvas">
-    <svg id="arrowLayer" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <marker id="arrowHead" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-          <path d="M0,0 L0,6 L8,3 z" fill="#c8a84b" opacity="0.85"/>
-        </marker>
-      </defs>
-    </svg>
+    <!-- SVGは後からJSで最後の子として追加して常に最前面に保つ -->
   </div>
 </div>
 
@@ -483,29 +478,84 @@ document.getElementById("btnTheme").onclick=()=>{ isDark=!isDark; applyTheme(); 
 document.getElementById("paletteToggle").onclick=()=>palette.classList.toggle("collapsed");
 
 // ── Zoom & Pan ────────────────────────────────────────
-function setTF(){ cv.style.transform=`translate(${ox}px,${oy}px) scale(${scale})`; zoomLbl.textContent=Math.round(scale*100)+"%"; }
-function zoom(cx2,cy2,f){ const r=cv.getBoundingClientRect(); ox-=(cx2-r.left)*(f-1); oy-=(cy2-r.top)*(f-1); scale=Math.max(0.1,Math.min(4,scale*f)); setTF(); }
-vp.addEventListener("wheel",e=>{e.preventDefault();zoom(e.clientX,e.clientY,e.deltaY<0?1.05:0.95);},{passive:false});
-function holdZ(id,f){ const b=document.getElementById(id); let iv; b.addEventListener("mousedown",()=>{iv=setInterval(()=>zoom(window.innerWidth/2,window.innerHeight/2,f),50);}); ["mouseup","mouseleave"].forEach(ev=>b.addEventListener(ev,()=>clearInterval(iv))); }
+function setTF(){
+  cv.style.transform=`translate(${ox}px,${oy}px) scale(${scale})`;
+  zoomLbl.textContent=Math.round(scale*100)+"%";
+}
+
+// ズーム：ビューポート基準で計算（transformの影響を受けない）
+function zoom(clientX, clientY, f){
+  const vpRect = vp.getBoundingClientRect();
+  // ビューポート内でのマウス位置
+  const mouseVpX = clientX - vpRect.left;
+  const mouseVpY = clientY - vpRect.top;
+  // キャンバス上の対応座標（現在のtransform逆算）
+  const canvasX = (mouseVpX - ox) / scale;
+  const canvasY = (mouseVpY - oy) / scale;
+  // スケール更新
+  scale = Math.max(0.1, Math.min(4, scale * f));
+  // ズーム後もマウス位置のキャンバス座標が同じ画面位置になるようoffsetを調整
+  ox = mouseVpX - canvasX * scale;
+  oy = mouseVpY - canvasY * scale;
+  setTF();
+}
+
+vp.addEventListener("wheel", e=>{
+  e.preventDefault();
+  zoom(e.clientX, e.clientY, e.deltaY < 0 ? 1.05 : 0.95);
+}, {passive:false});
+
+function holdZ(id, f){
+  const b = document.getElementById(id);
+  let iv;
+  b.addEventListener("mousedown", ()=>{
+    iv = setInterval(()=>{
+      const vpRect = vp.getBoundingClientRect();
+      zoom(vpRect.left + vpRect.width/2, vpRect.top + vpRect.height/2, f);
+    }, 50);
+  });
+  ["mouseup","mouseleave"].forEach(ev => b.addEventListener(ev, ()=>clearInterval(iv)));
+}
 holdZ("zIn",1.05); holdZ("zOut",0.95);
 
-vp.addEventListener("mousedown",e=>{
-  if(inputBox.style.display==="block"||threadView.classList.contains("open")) return;
-  const cls=e.target.classList;
-  if(e.target===cv||cls.contains("note")||cls.contains("note-text")||cls.contains("note-author")||cls.contains("score-img-wrap")){
-    panning=true; panSX=e.clientX-ox; panSY=e.clientY-oy;
-  }
+// パン：ビューポート全体で受け取る（付箋・画像のドラッグはmkDragが止める）
+let panStartedOnBg = false;
+vp.addEventListener("mousedown", e=>{
+  if(inputBox.style.display==="block" || threadView.classList.contains("open")) return;
+  // ボタン類・モーダル・パレット上は無視
+  if(e.target.closest("button,input,textarea,select,.mbg,#palette,#topBar")) return;
+  panStartedOnBg = true;
+  panning = true;
+  panSX = e.clientX - ox;
+  panSY = e.clientY - oy;
 });
-document.addEventListener("mousemove",e=>{ if(panning){ox=e.clientX-panSX;oy=e.clientY-panSY;setTF();} });
-document.addEventListener("mouseup",()=>{ panning=false; });
+document.addEventListener("mousemove", e=>{
+  if(!panning || !panStartedOnBg) return;
+  ox = e.clientX - panSX;
+  oy = e.clientY - panSY;
+  setTF();
+});
+document.addEventListener("mouseup", ()=>{
+  panning = false;
+  panStartedOnBg = false;
+});
 
-cv.addEventListener("mousedown",e=>{mdX=e.clientX;mdY=e.clientY;mdT=Date.now();});
-cv.addEventListener("mouseup",e=>{
-  if(placingMode) return; // 配置モード中は付箋作成を無効化
+// ビューポート内のクライアント座標をキャンバス座標に変換
+function clientToCanvas(clientX, clientY){
+  const vpRect = vp.getBoundingClientRect();
+  return {
+    x: (clientX - vpRect.left - ox) / scale,
+    y: (clientY - vpRect.top  - oy) / scale
+  };
+}
+
+cv.addEventListener("mousedown", e=>{mdX=e.clientX; mdY=e.clientY; mdT=Date.now();});
+cv.addEventListener("mouseup", e=>{
+  if(placingMode) return;
   if(inputBox.style.display==="block"||justClosed||e.target!==cv) return;
   if(Math.abs(e.clientX-mdX)>5||Math.abs(e.clientY-mdY)>5||Date.now()-mdT>400) return;
-  const r=cv.getBoundingClientRect();
-  openIB(e.clientX,e.clientY,(e.clientX-r.left)/scale,(e.clientY-r.top)/scale);
+  const pos = clientToCanvas(e.clientX, e.clientY);
+  openIB(e.clientX, e.clientY, pos.x, pos.y);
 });
 
 // ── Note Input ────────────────────────────────────────
@@ -554,23 +604,60 @@ document.getElementById("btnNote").onclick=()=>{
 };
 
 // ── Draggable ─────────────────────────────────────────
-function mkDrag(el,stop,onEnd){
+function mkDrag(el, stop, onEnd){
   let dx,dy,nx,ny,drag=false;
-  el.addEventListener("mousedown",e=>{
+  el.addEventListener("mousedown", e=>{
     if(["BUTTON","SELECT","INPUT","TEXTAREA"].includes(e.target.tagName)) return;
     if(e.target.classList.contains("reply-btn")||e.target.classList.contains("toggle-btn")||e.target.classList.contains("score-img-resize")) return;
     if(stop) e.stopPropagation();
-    drag=true; panning=false;
+    drag=true;
+    // パンが同時に動かないようにフラグをリセット
+    panning=false; panStartedOnBg=false;
     dx=e.clientX; dy=e.clientY;
-    nx=parseFloat(el.style.left)||0; ny=parseFloat(el.style.top)||0;
+    nx=parseFloat(el.style.left)||0;
+    ny=parseFloat(el.style.top)||0;
     el.style.cursor="grabbing"; el.style.zIndex=99;
   });
-  document.addEventListener("mousemove",e=>{ if(drag){el.style.left=nx+(e.clientX-dx)/scale+"px";el.style.top=ny+(e.clientY-dy)/scale+"px";} });
-  document.addEventListener("mouseup",()=>{ if(drag){drag=false;el.style.cursor="grab";el.style.zIndex="";if(onEnd)onEnd(parseFloat(el.style.left),parseFloat(el.style.top));} });
+  document.addEventListener("mousemove", e=>{
+    if(!drag) return;
+    el.style.left = nx+(e.clientX-dx)/scale+"px";
+    el.style.top  = ny+(e.clientY-dy)/scale+"px";
+  });
+  document.addEventListener("mouseup", ()=>{
+    if(drag){
+      drag=false;
+      el.style.cursor="grab";
+      el.style.zIndex="";
+      if(onEnd) onEnd(parseFloat(el.style.left), parseFloat(el.style.top));
+    }
+  });
 }
 
 // ── Arrow SVG layer ───────────────────────────────────
-const arrowLayer = document.getElementById("arrowLayer");
+// SVGをJSで生成してキャンバスに追加（常に最前面を維持）
+const arrowSVG = document.createElementNS("http://www.w3.org/2000/svg","svg");
+arrowSVG.id = "arrowLayer";
+arrowSVG.setAttribute("xmlns","http://www.w3.org/2000/svg");
+arrowSVG.style.cssText = "position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:visible;";
+const defs = document.createElementNS("http://www.w3.org/2000/svg","defs");
+const marker = document.createElementNS("http://www.w3.org/2000/svg","marker");
+marker.setAttribute("id","arrowHead"); marker.setAttribute("markerWidth","10");
+marker.setAttribute("markerHeight","10"); marker.setAttribute("refX","8");
+marker.setAttribute("refY","3"); marker.setAttribute("orient","auto");
+const mPath = document.createElementNS("http://www.w3.org/2000/svg","path");
+mPath.setAttribute("d","M0,0 L0,6 L9,3 z"); mPath.setAttribute("fill","#c8a84b");
+marker.appendChild(mPath); defs.appendChild(marker); arrowSVG.appendChild(defs);
+cv.appendChild(arrowSVG);
+const arrowLayer = arrowSVG;
+
+// 要素をキャンバスに追加するたびにSVGを最前面へ
+function appendToCanvas(el){
+  cv.insertBefore(el, arrowLayer); // SVGの直前に挿入 → SVGは常に最後
+}
+
+// 付箋のpin情報: noteId -> {pin_x, pin_y}
+const notePins = {};
+const arrowEls = {}; // noteId -> {line, dot}
 
 // 付箋のpin情報: noteId -> {pin_x, pin_y} (キャンバス座標)
 const notePins = {}; // noteId -> {pin_x, pin_y}
@@ -659,7 +746,7 @@ function renderNote(row){
     await sb.from("notes").update({x:nx2,y:ny2}).eq("id",row.id);
     refreshArrow(row.id);
   });
-  cv.appendChild(el);
+  appendToCanvas(el);
   noteEls[row.id]=el;
 }
 
@@ -779,9 +866,9 @@ function renderScoreImg(row){
     if(!pinImgMode||pinImgId!==row.id) return;
     e.stopPropagation();
     // キャンバス座標でクリック位置を計算
-    const r=cv.getBoundingClientRect();
-    const pinX=(e.clientX-r.left)/scale;
-    const pinY=(e.clientY-r.top)/scale;
+    const pos = clientToCanvas(e.clientX, e.clientY);
+    const pinX = pos.x;
+    const pinY = pos.y;
     // 付箋の配置位置を計算（画像と重ならない）
     const notePos=calcNotePos(pinX,pinY,row.id);
     exitPinImgMode();
@@ -793,10 +880,9 @@ function renderScoreImg(row){
   wrap.append(pb,db,img,lbl,rh);
   mkDrag(wrap,true,async(nx2,ny2)=>{
     await sb.from("canvas_images").update({x:nx2,y:ny2}).eq("id",row.id);
-    // 付箋の矢印を全部再描画
     Object.keys(notePins).forEach(drawArrow);
   });
-  cv.appendChild(wrap);
+  appendToCanvas(wrap);
   imgEls[row.id]=wrap;
 }
 
@@ -861,9 +947,9 @@ vp.addEventListener("click",async e=>{
   e.stopPropagation();
   e.preventDefault();
 
-  const r=cv.getBoundingClientRect();
-  const cx2=(e.clientX-r.left)/scale;
-  const cy2=(e.clientY-r.top)/scale;
+  const pos = clientToCanvas(e.clientX, e.clientY);
+  const cx2 = pos.x;
+  const cy2 = pos.y;
 
   const item=pendingImgUrls.shift();
   const {data:inserted,error:insErr}=await sb.from("canvas_images").insert({
@@ -1131,8 +1217,33 @@ document.getElementById("scoreClose").onclick=()=>document.getElementById("score
 document.getElementById("scoreModal").addEventListener("click",e=>{if(e.target===document.getElementById("scoreModal"))document.getElementById("scoreModal").classList.remove("open");});
 
 // ── Admin ─────────────────────────────────────────────
+const btnClearImgs = document.getElementById("btnClearImgs");
+btnClearImgs.onclick = async()=>{
+  if(!isAdmin) return;
+  if(!confirm("キャンバス上の画像をすべて削除しますか？\n（Storageのファイルも削除されます）")) return;
+  // DBから全件取得してStorage削除 → DB削除
+  const {data}=await sb.from("canvas_images").select("id,url");
+  if(data && data.length>0){
+    const paths=data.map(r=>{
+      const parts=r.url.split("/"+BUCKET+"/");
+      return parts.length>1?parts[1]:null;
+    }).filter(Boolean);
+    if(paths.length>0) await sb.storage.from(BUCKET).remove(paths);
+    await sb.from("canvas_images").delete().neq("id","00000000-0000-0000-0000-000000000000");
+  }
+  // DOM上の画像を全削除
+  Object.values(imgEls).forEach(el=>el.remove());
+  Object.keys(imgEls).forEach(k=>delete imgEls[k]);
+};
+
 document.getElementById("btnAdmin").onclick=()=>{
-  if(isAdmin){ isAdmin=false; document.body.classList.remove("admin-mode"); document.getElementById("adminBadge").style.display="none"; document.getElementById("btnAdmin").classList.remove("on"); return; }
+  if(isAdmin){
+    isAdmin=false; document.body.classList.remove("admin-mode");
+    document.getElementById("adminBadge").style.display="none";
+    document.getElementById("btnAdmin").classList.remove("on");
+    btnClearImgs.style.display="none";
+    return;
+  }
   document.getElementById("pwModal").classList.add("open");
   document.getElementById("pwIn").value=""; document.getElementById("pwErr").style.display="none";
   setTimeout(()=>document.getElementById("pwIn").focus(),50);
@@ -1142,8 +1253,13 @@ document.getElementById("pwOk").onclick=()=>{
     isAdmin=true; document.body.classList.add("admin-mode");
     document.getElementById("adminBadge").style.display="block";
     document.getElementById("btnAdmin").classList.add("on");
+    btnClearImgs.style.display="block";
     document.getElementById("pwModal").classList.remove("open");
-  } else { document.getElementById("pwErr").style.display="block"; document.getElementById("pwIn").value=""; document.getElementById("pwIn").focus(); }
+  } else {
+    document.getElementById("pwErr").style.display="block";
+    document.getElementById("pwIn").value="";
+    document.getElementById("pwIn").focus();
+  }
 };
 document.getElementById("pwCancel").onclick=()=>document.getElementById("pwModal").classList.remove("open");
 document.getElementById("pwIn").addEventListener("keydown",e=>{if(e.key==="Enter")document.getElementById("pwOk").click();});
