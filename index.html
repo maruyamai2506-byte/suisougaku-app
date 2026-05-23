@@ -655,11 +655,7 @@ function appendToCanvas(el){
   cv.insertBefore(el, arrowLayer); // SVGの直前に挿入 → SVGは常に最後
 }
 
-// 付箋のpin情報: noteId -> {pin_x, pin_y}
-const notePins = {};
-const arrowEls = {}; // noteId -> {line, dot}
-
-// 付箋のpin情報: noteId -> {pin_x, pin_y} (キャンバス座標)
+// 付箋のpin情報とarrow要素
 const notePins = {}; // noteId -> {pin_x, pin_y}
 const arrowEls = {}; // noteId -> {line, dot}
 
@@ -1274,17 +1270,36 @@ async function init(){
       sb.from("threads").select("*").order("created_at",{ascending:true}),
       sb.from("canvas_images").select("*").order("created_at",{ascending:true})
     ]);
-    if(n.error||r.error||t.error||imgs.error) throw n.error||r.error||t.error||imgs.error;
-    (n.data||[]).forEach(renderNote);
-    (r.data||[]).forEach(renderReply);
-    (t.data||[]).forEach(addPItem);
-    (imgs.data||[]).forEach(renderScoreImg);
+
+    // 各クエリのエラーをコンソールに出すが止めない
+    if(n.error)    console.warn("notes読み込みエラー:",n.error.message);
+    if(r.error)    console.warn("replies読み込みエラー:",r.error.message);
+    if(t.error)    console.warn("threads読み込みエラー:",t.error.message);
+    if(imgs.error) console.warn("canvas_images読み込みエラー:",imgs.error.message);
+
+    (n.data||[]).forEach(row=>{ try{ renderNote(row); }catch(e){ console.warn("renderNote失敗",e); } });
+    (r.data||[]).forEach(row=>{ try{ renderReply(row); }catch(e){ console.warn("renderReply失敗",e); } });
+    (t.data||[]).forEach(row=>{ try{ addPItem(row); }catch(e){ console.warn("addPItem失敗",e); } });
+    (imgs.data||[]).forEach(row=>{ try{ renderScoreImg(row); }catch(e){ console.warn("renderScoreImg失敗",e); } });
+
     subscribeGlobal();
     applyTheme();
     document.getElementById("loadOver").classList.add("hide");
+
+    // canvas_imagesにlabelカラムがなければコンソールに案内
+    if(imgs.error && imgs.error.message.includes("label")){
+      console.info("【案内】Supabase SQL Editorで以下を実行してください:\nalter table canvas_images add column if not exists label text default '';");
+    }
   } catch(e){
-    document.getElementById("loadMsg").textContent="接続失敗: "+e.message;
+    // 完全に接続できない場合のみエラー表示
+    console.error("init失敗:",e);
+    document.getElementById("loadMsg").textContent="接続失敗: "+e.message+"\n\nページをリロードするか、Supabaseの設定を確認してください。";
     setSyncStatus("err","🔴 接続失敗");
+    // それでもUIは表示する
+    setTimeout(()=>{
+      document.getElementById("loadOver").classList.add("hide");
+      applyTheme();
+    }, 3000);
   }
 }
 init();
