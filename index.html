@@ -1893,35 +1893,25 @@ async function init(){
   applyTheme();
   setSyncStatus("","接続中...");
 
-  // 認証状態の変化を先に登録（Googleログイン後のリダイレクト対応）
+  // onAuthStateChangeを主軸にする（getSessionのタイムアウト問題を回避）
   sb.auth.onAuthStateChange(async (event, session) => {
     console.log("authStateChange:", event, session?.user?.email);
     if(event === "SIGNED_IN" && session?.user){
-      document.getElementById("loadOver").classList.remove("hide");
       document.getElementById("loadMsg").textContent = "ログイン確認中...";
       await checkApprovalAndRoute(session.user);
     } else if(event === "SIGNED_OUT"){
-      showScreen("loginScreen");
-    }
-  });
-
-  // タイムアウト付きでセッション確認
-  try{
-    const timeout = new Promise((_,reject) => setTimeout(()=>reject(new Error("timeout")), 8000));
-    const sessionPromise = sb.auth.getSession();
-    const {data:{session}} = await Promise.race([sessionPromise, timeout]);
-
-    if(session?.user){
-      await checkApprovalAndRoute(session.user);
-    } else {
       document.getElementById("loadOver").classList.add("hide");
       showScreen("loginScreen");
+    } else if(event === "INITIAL_SESSION"){
+      if(session?.user){
+        document.getElementById("loadMsg").textContent = "ログイン確認中...";
+        await checkApprovalAndRoute(session.user);
+      } else {
+        document.getElementById("loadOver").classList.add("hide");
+        showScreen("loginScreen");
+      }
     }
-  } catch(e){
-    console.error("セッション取得失敗:", e);
-    document.getElementById("loadOver").classList.add("hide");
-    showScreen("loginScreen");
-  }
+  });
 }
 init();
 
