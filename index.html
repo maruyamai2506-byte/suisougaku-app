@@ -610,13 +610,62 @@ body.admin-mode .pdel{display:block;}
 </div>
 
 <!-- ════════════════════════════════════
+     LOGIN SCREEN
+════════════════════════════════════ -->
+<div id="loginScreen" style="display:none;position:fixed;inset:0;z-index:1800;background:var(--bg);flex-direction:column;align-items:center;justify-content:center;">
+  <div style="position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 30% 40%,rgba(124,92,191,0.18) 0%,transparent 60%),radial-gradient(ellipse 60% 80% at 70% 60%,rgba(212,168,67,0.12) 0%,transparent 60%);pointer-events:none;"></div>
+  <div style="position:relative;z-index:1;text-align:center;max-width:380px;padding:40px 32px;background:var(--surface);border:1px solid var(--border2);border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,0.5),0 0 0 1px var(--glow);">
+    <div style="font-size:48px;margin-bottom:12px;">🎺</div>
+    <div style="font-family:'Noto Serif JP',serif;font-size:22px;font-weight:900;color:var(--accent2);margin-bottom:6px;letter-spacing:.1em;">吹奏楽ディスカッション</div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:32px;line-height:1.8;">学校用Googleアカウントでログインしてください<br>初回は管理者の承認が必要です</div>
+    <button id="googleLoginBtn" style="display:flex;align-items:center;justify-content:center;gap:12px;width:100%;padding:13px 20px;background:#fff;border:1px solid #ddd;border-radius:10px;font-size:14px;font-weight:700;color:#333;cursor:pointer;transition:box-shadow .2s;">
+      <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.2l6.7-6.7C35.7 2.5 30.2 0 24 0 14.6 0 6.6 5.4 2.6 13.3l7.8 6.1C12.4 13 17.8 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4.1 7.1-10.1 7.1-17z"/><path fill="#FBBC05" d="M10.4 28.6A14.8 14.8 0 0 1 9.5 24c0-1.6.3-3.1.8-4.6l-7.8-6.1A23.9 23.9 0 0 0 0 24c0 3.9.9 7.5 2.6 10.7l7.8-6.1z"/><path fill="#34A853" d="M24 48c6.2 0 11.4-2 15.2-5.5l-7.5-5.8c-2 1.4-4.6 2.2-7.7 2.2-6.2 0-11.5-4.2-13.4-9.9l-7.8 6.1C6.5 42.5 14.6 48 24 48z"/></svg>
+      Googleでログイン
+    </button>
+    <div id="loginErr" style="display:none;margin-top:14px;font-size:12px;color:var(--danger);background:rgba(208,80,96,0.1);border:1px solid var(--danger);border-radius:7px;padding:8px 12px;"></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+     PENDING SCREEN（承認待ち）
+════════════════════════════════════ -->
+<div id="pendingScreen" style="display:none;position:fixed;inset:0;z-index:1800;background:var(--bg);flex-direction:column;align-items:center;justify-content:center;">
+  <div style="position:relative;z-index:1;text-align:center;max-width:380px;padding:40px 32px;background:var(--surface);border:1px solid var(--border2);border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+    <div style="font-size:44px;margin-bottom:14px;">⏳</div>
+    <div style="font-family:'Noto Serif JP',serif;font-size:18px;font-weight:700;color:var(--accent2);margin-bottom:10px;">承認待ちです</div>
+    <div style="font-size:13px;color:var(--text2);line-height:1.9;margin-bottom:24px;">管理者が承認するまでアプリを使用できません。<br>しばらくお待ちください。</div>
+    <div id="pendingEmail" style="font-size:12px;color:var(--text3);margin-bottom:20px;"></div>
+    <button id="logoutFromPending" style="font-size:12px;padding:7px 18px;background:var(--surface2);border:1px solid var(--border2);border-radius:7px;color:var(--text2);cursor:pointer;">別のアカウントでログイン</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
      HOME SCREEN
 ════════════════════════════════════ -->
 <div id="homeScreen">
   <div id="homeBar">
+    <div id="loginUserInfo" style="font-size:11px;color:var(--text2);display:none;align-items:center;gap:8px;">
+      <span id="loginUserName"></span>
+    </div>
     <button class="hbtn" id="homeThemeBtn">🌙</button>
+    <button class="hbtn" id="btnApprovals" style="display:none;">👥 承認管理</button>
     <button class="hbtn" id="homeAdminBtn">🔑 管理者</button>
     <div id="homeAdminBadge" style="display:none;font-size:10px;padding:3px 10px;background:var(--danger);color:#fff;border-radius:10px;font-weight:700;">ADMIN</div>
+    <button class="hbtn" id="logoutBtn" style="display:none;">ログアウト</button>
+  </div>
+
+  <!-- 承認管理モーダル -->
+  <div id="approvalsModal" style="display:none;position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,0.75);align-items:center;justify-content:center;backdrop-filter:blur(6px);">
+    <div style="background:var(--surface);border:1px solid var(--border2);border-radius:16px;padding:24px;width:480px;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.6);">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+        <h3 style="font-family:'Noto Serif JP',serif;font-size:15px;color:var(--accent);margin:0;">👥 承認管理</h3>
+        <button id="approvalsClose" style="background:none;border:1px solid var(--border2);border-radius:5px;color:var(--text2);padding:3px 10px;font-size:12px;cursor:pointer;">閉じる</button>
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:12px;">承認すると部員はアプリを使用できるようになります</div>
+      <div id="approvalsList" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:8px;">
+        <div style="text-align:center;padding:20px;font-size:12px;color:var(--text3);">読み込み中...</div>
+      </div>
+    </div>
   </div>
 
   <div id="homeHeader">
@@ -1664,37 +1713,196 @@ function subscribeRoom(roomId){
 function unsubRoom(){if(rtRoomCh){sb.removeChannel(rtRoomCh);rtRoomCh=null;}}
 
 // ══════════════════════════════════════════════
-//  Init
+//  Auth & Init
 // ══════════════════════════════════════════════
-async function init(){
-  setSyncStatus("","接続中...");
-  try{
-    // 広場一覧を取得
-    const {data:rooms,error:rErr} = await sb.from("canvas_rooms").select("*").order("created_at",{ascending:true});
-    if(rErr) console.warn("canvas_rooms読み込みエラー:",rErr.message);
+let currentUser = null;
 
-    (rooms||[]).forEach(r=>{ try{renderRoomCard(r);}catch(e){console.warn(e);} });
-
-    // rooms のリアルタイム（ホーム画面用）
-    sb.channel("rooms_home")
-      .on("postgres_changes",{event:"INSERT",schema:"public",table:"canvas_rooms"},p=>renderRoomCard(p.new))
-      .on("postgres_changes",{event:"DELETE",schema:"public",table:"canvas_rooms"},p=>removeRoomCard(p.old.id))
-      .subscribe();
-
-    applyTheme();
-    document.getElementById("loadOver").classList.add("hide");
-
-    // ランダムコメント（広場が1件以上あるとき）
-    if((rooms||[]).length > 0) await loadRandomComments();
-
-  } catch(e){
-    console.error("init失敗:",e);
-    document.getElementById("loadMsg").textContent="接続失敗: "+e.message;
-    setSyncStatus("err","🔴 接続失敗");
-    setTimeout(()=>{document.getElementById("loadOver").classList.add("hide");applyTheme();},3000);
+// 画面切り替えヘルパー
+function showScreen(name){
+  ["loginScreen","pendingScreen","homeScreen"].forEach(id=>{
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.style.display = (id === name) ? "flex" : "none";
+  });
+  // topBar・viewportはshowHome/showCanvasで制御
+  if(name !== "homeScreen"){
+    document.getElementById("topBar").classList.remove("visible");
+    document.getElementById("viewport").style.display = "none";
+    palette.classList.remove("visible");
+    document.getElementById("paletteToggle").style.display = "none";
   }
 }
+
+// Googleログイン
+document.getElementById("googleLoginBtn").onclick = async () => {
+  const {error} = await sb.auth.signInWithOAuth({
+    provider: "google",
+    options: { redirectTo: location.href }
+  });
+  if(error){
+    const e = document.getElementById("loginErr");
+    e.textContent = "ログインに失敗しました: " + error.message;
+    e.style.display = "block";
+  }
+};
+
+// ログアウト
+async function doLogout(){
+  await sb.auth.signOut();
+  currentUser = null;
+  showScreen("loginScreen");
+}
+document.getElementById("logoutBtn").onclick = doLogout;
+document.getElementById("logoutFromPending").onclick = doLogout;
+
+// ログイン後のユーザー情報をUIに反映
+function setUserUI(user){
+  const info = document.getElementById("loginUserInfo");
+  const name = document.getElementById("loginUserName");
+  if(user){
+    info.style.display = "flex";
+    name.textContent = user.user_metadata?.full_name || user.email;
+    document.getElementById("logoutBtn").style.display = "block";
+  } else {
+    info.style.display = "none";
+    document.getElementById("logoutBtn").style.display = "none";
+  }
+}
+
+// 承認状態を確認してどの画面を出すか決める
+async function checkApprovalAndRoute(user){
+  currentUser = user;
+  setUserUI(user);
+
+  // user_approvalsに登録 or 確認
+  const {data: existing} = await sb.from("user_approvals")
+    .select("approved")
+    .eq("user_id", user.id)
+    .single();
+
+  if(!existing){
+    // 初回ログイン → 承認待ちレコードを作成
+    await sb.from("user_approvals").insert({
+      user_id: user.id,
+      email: user.email,
+      display_name: user.user_metadata?.full_name || user.email,
+      approved: false
+    });
+    document.getElementById("pendingEmail").textContent = user.email;
+    showScreen("pendingScreen");
+    return;
+  }
+
+  if(!existing.approved){
+    document.getElementById("pendingEmail").textContent = user.email;
+    showScreen("pendingScreen");
+    return;
+  }
+
+  // 承認済み → ホーム画面へ
+  await enterApp();
+}
+
+// 承認済みユーザーがアプリに入る
+async function enterApp(){
+  showScreen("homeScreen");
+  applyTheme();
+  document.getElementById("loadOver").classList.add("hide");
+
+  const {data:rooms} = await sb.from("canvas_rooms").select("*").order("created_at",{ascending:true});
+  (rooms||[]).forEach(r=>{ try{renderRoomCard(r);}catch(e){console.warn(e);} });
+
+  sb.channel("rooms_home")
+    .on("postgres_changes",{event:"INSERT",schema:"public",table:"canvas_rooms"},p=>renderRoomCard(p.new))
+    .on("postgres_changes",{event:"DELETE",schema:"public",table:"canvas_rooms"},p=>removeRoomCard(p.old.id))
+    .subscribe();
+
+  if((rooms||[]).length > 0) await loadRandomComments();
+}
+
+// ── 承認管理UI（管理者のみ）──
+document.getElementById("btnApprovals").onclick = async () => {
+  const modal = document.getElementById("approvalsModal");
+  modal.style.display = "flex";
+  await refreshApprovals();
+};
+document.getElementById("approvalsClose").onclick = () => {
+  document.getElementById("approvalsModal").style.display = "none";
+};
+
+async function refreshApprovals(){
+  const list = document.getElementById("approvalsList");
+  list.innerHTML = '<div style="text-align:center;padding:20px;font-size:12px;color:var(--text3);">読み込み中...</div>';
+  const {data, error} = await sb.from("user_approvals").select("*").order("created_at",{ascending:true});
+  if(error || !data || data.length === 0){
+    list.innerHTML = '<div style="text-align:center;padding:20px;font-size:12px;color:var(--text3);">登録ユーザーがいません</div>';
+    return;
+  }
+  list.innerHTML = "";
+  for(const u of data){
+    const row = document.createElement("div");
+    row.style.cssText = "display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;";
+
+    const info = document.createElement("div");
+    info.style.cssText = "flex:1;min-width:0;";
+    info.innerHTML = `
+      <div style="font-size:13px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${u.display_name||""}</div>
+      <div style="font-size:11px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${u.email}</div>
+      <div style="font-size:10px;color:var(--text3);margin-top:2px;">${new Date(u.created_at).toLocaleString("ja-JP")}</div>
+    `;
+
+    const badge = document.createElement("div");
+    badge.style.cssText = `font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700;flex-shrink:0;${u.approved ? "background:#2d6a4f;color:#74c69d;" : "background:#4a1020;color:#ff6b81;"}`;
+    badge.textContent = u.approved ? "承認済" : "未承認";
+
+    const btn = document.createElement("button");
+    btn.style.cssText = `font-size:11px;padding:5px 12px;border-radius:6px;cursor:pointer;font-weight:700;flex-shrink:0;border:none;${u.approved ? "background:var(--danger);color:#fff;" : "background:var(--accent);color:#000;"}`;
+    btn.textContent = u.approved ? "取り消す" : "承認する";
+    btn.onclick = async () => {
+      btn.disabled = true;
+      btn.textContent = "...";
+      await sb.from("user_approvals").update({approved: !u.approved}).eq("user_id", u.user_id);
+      await refreshApprovals();
+    };
+
+    row.append(info, badge, btn);
+    list.appendChild(row);
+  }
+}
+
+// setAdminUI拡張（承認管理ボタンも制御）
+const _origSetAdminUI = setAdminUI;
+function setAdminUI(on){
+  _origSetAdminUI(on);
+  document.getElementById("btnApprovals").style.display = on ? "block" : "none";
+}
+
+// ── メイン初期化 ──
+async function init(){
+  applyTheme();
+  setSyncStatus("","接続中...");
+
+  // セッション確認
+  const {data:{session}} = await sb.auth.getSession();
+
+  if(session?.user){
+    await checkApprovalAndRoute(session.user);
+  } else {
+    document.getElementById("loadOver").classList.add("hide");
+    showScreen("loginScreen");
+  }
+
+  // 認証状態の変化を監視（Googleログイン後のリダイレクト対応）
+  sb.auth.onAuthStateChange(async (event, session) => {
+    if(event === "SIGNED_IN" && session?.user){
+      await checkApprovalAndRoute(session.user);
+    } else if(event === "SIGNED_OUT"){
+      showScreen("loginScreen");
+    }
+  });
+}
 init();
+
 </script>
 </body>
 </html>
