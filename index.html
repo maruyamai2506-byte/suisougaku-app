@@ -1779,11 +1779,20 @@ async function checkApprovalAndRoute(user){
 
   try{
     console.log("checkApprovalAndRoute: user_approvals検索開始");
-    const {data: existing, error: selErr} = await sb.from("user_approvals")
+
+    // タイムアウト付きでクエリ実行
+    const queryPromise = sb.from("user_approvals")
       .select("approved")
       .eq("user_id", user.id)
-      .maybeSingle();
-    console.log("checkApprovalAndRoute: 結果", existing, selErr?.message);
+      .limit(1);
+    const timeoutPromise = new Promise((_,reject) =>
+      setTimeout(()=>reject(new Error("query timeout")), 10000)
+    );
+
+    const {data, error: selErr} = await Promise.race([queryPromise, timeoutPromise]);
+    console.log("checkApprovalAndRoute: 結果", data, selErr?.message);
+
+    const existing = data && data.length > 0 ? data[0] : null;
 
     if(selErr){
       console.error("checkApprovalAndRoute: DBエラー", selErr.message);
@@ -1818,7 +1827,7 @@ async function checkApprovalAndRoute(user){
     console.log("checkApprovalAndRoute: 承認済み、enterApp呼び出し");
     await enterApp();
   } catch(e){
-    console.error("checkApprovalAndRoute失敗:", e);
+    console.error("checkApprovalAndRoute失敗:", e.message);
     document.getElementById("loadOver").classList.add("hide");
     showScreen("loginScreen");
   }
