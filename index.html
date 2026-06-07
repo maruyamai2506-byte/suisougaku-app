@@ -1841,11 +1841,13 @@ async function enterApp(){
   document.getElementById("loadOver").classList.add("hide");
   console.log("enterApp: ホーム画面表示完了");
 
+  let rooms = [];
   try{
     console.log("enterApp: canvas_rooms取得開始");
-    const {data:rooms, error:rErr} = await sb.from("canvas_rooms").select("*").order("created_at",{ascending:true});
-    console.log("enterApp: canvas_rooms取得完了", rooms?.length, rErr?.message);
-    (rooms||[]).forEach(r=>{ try{renderRoomCard(r);}catch(e){console.warn(e);} });
+    const {data, error:rErr} = await sb.from("canvas_rooms").select("*").order("created_at",{ascending:true});
+    console.log("enterApp: canvas_rooms取得完了", data?.length, rErr?.message);
+    rooms = data || [];
+    rooms.forEach(r=>{ try{renderRoomCard(r);}catch(e){console.warn(e);} });
   } catch(e){
     console.error("enterApp: canvas_rooms取得失敗", e);
   }
@@ -1855,7 +1857,7 @@ async function enterApp(){
     .on("postgres_changes",{event:"DELETE",schema:"public",table:"canvas_rooms"},p=>removeRoomCard(p.old.id))
     .subscribe();
 
-  if((rooms||[]).length > 0) await loadRandomComments();
+  if(rooms.length > 0) await loadRandomComments();
 }
 
 // ── 承認管理UI（管理者のみ）──
