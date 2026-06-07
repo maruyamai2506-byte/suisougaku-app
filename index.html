@@ -725,17 +725,19 @@ body.admin-mode .pdel{display:block;}
     </div>
   </div>
 
-  <!-- PASSWORD MODAL（ホーム用・homeScreen内） -->
-  <div class="home-modal" id="pwModalHome" style="position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,0.75);display:none;align-items:center;justify-content:center;backdrop-filter:blur(6px);">
-    <div class="mbox" style="width:300px">
-      <h3>🔑 管理者ログイン</h3>
-      <p style="font-size:11px;color:var(--text2);margin-bottom:13px">管理者パスワードを入力してください</p>
-      <input type="password" id="pwInHome" placeholder="パスワード">
-      <div class="merr" id="pwErrHome">パスワードが違います</div>
-      <div class="mr">
-        <button class="mpri" id="pwOkHome">ログイン</button>
-        <button id="pwCancelHome">キャンセル</button>
-      </div>
+  <!-- PASSWORD MODAL（homeScreen内から削除） -->
+</div>
+
+<!-- パスワードモーダル（body直下・ホーム・キャンバス共通） -->
+<div id="pwModalHome" style="position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.75);display:none;align-items:center;justify-content:center;backdrop-filter:blur(6px);">
+  <div class="mbox" style="width:300px">
+    <h3>🔑 管理者ログイン</h3>
+    <p style="font-size:11px;color:var(--text2);margin-bottom:13px">管理者パスワードを入力してください</p>
+    <input type="password" id="pwInHome" placeholder="パスワード">
+    <div class="merr" id="pwErrHome">パスワードが違います</div>
+    <div class="mr">
+      <button class="mpri" id="pwOkHome">ログイン</button>
+      <button id="pwCancelHome">キャンセル</button>
     </div>
   </div>
 </div>
@@ -1202,6 +1204,7 @@ async function loadRoom(roomId){
 // ══════════════════════════════════════════════
 //  Admin
 // ══════════════════════════════════════════════
+// setAdminUI（承認管理ボタンも含む統合版）
 function setAdminUI(on){
   isAdmin = on;
   document.body.classList.toggle("admin-mode", on);
@@ -1210,6 +1213,7 @@ function setAdminUI(on){
   document.getElementById("btnAdmin").classList.toggle("on", on);
   document.getElementById("homeAdminBtn").classList.toggle("on", on);
   document.getElementById("btnClearImgs").style.display = on ? "block" : "none";
+  document.getElementById("btnApprovals").style.display = on ? "block" : "none";
 }
 
 // パスワードモーダル（ホーム・キャンバス共通でpwModalHomeを使用）
@@ -1908,13 +1912,6 @@ async function refreshApprovals(){
     row.append(info, badge, btn);
     list.appendChild(row);
   }
-}
-
-// setAdminUI拡張（承認管理ボタンも制御）
-const _origSetAdminUI = setAdminUI;
-function setAdminUI(on){
-  _origSetAdminUI(on);
-  document.getElementById("btnApprovals").style.display = on ? "block" : "none";
 }
 
 // ── メイン初期化 ──
