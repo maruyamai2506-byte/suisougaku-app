@@ -1310,7 +1310,8 @@ function clientToCanvas(clientX, clientY){
 cv.addEventListener("mousedown", e=>{mdX=e.clientX;mdY=e.clientY;mdT=Date.now();});
 cv.addEventListener("mouseup", e=>{
   if(placingMode) return;
-  if(inputBox.style.display==="block"||justClosed||e.target!==cv) return;
+  const isCanvasBg = e.target===cv || e.target===arrowLayer;
+  if(inputBox.style.display==="block"||justClosed||!isCanvasBg) return;
   if(Math.abs(e.clientX-mdX)>5||Math.abs(e.clientY-mdY)>5||Date.now()-mdT>400) return;
   const pos = clientToCanvas(e.clientX, e.clientY);
   openIB(e.clientX, e.clientY, pos.x, pos.y);
