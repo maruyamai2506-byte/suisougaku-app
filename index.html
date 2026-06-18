@@ -804,7 +804,7 @@ body.admin-mode .pdel{display:block;}
 <div id="inputBox">
   <div id="ibMode">📝 新しい付箋</div>
   <label>名前</label>
-  <div id="ibName" style="font-size:12px;color:var(--text2);padding:3px 0;margin-bottom:2px;"></div>
+  <input id="ibName" type="text" placeholder="ニックネーム" maxlength="30" style="width:100%;box-sizing:border-box;">
   <label>内容</label>
   <textarea id="ibText" placeholder="ここに書く…"></textarea>
   <label id="ibCL">色</label>
@@ -1326,8 +1326,7 @@ function openIB(sx,sy,cx2,cy2,mode="note",el=null,id=null){
   document.getElementById("ibCL").style.display = mode==="note" ? "" : "none";
   ibColor.style.display = mode==="note" ? "" : "none";
   ibText.value="";
-  const displayName = currentUser ? (currentUser.user_metadata?.full_name || currentUser.email) : "名無し";
-  ibName.textContent = "👤 " + displayName;
+  ibName.value = localStorage.getItem("ib_nickname") || "";
   inputBox.style.display="block";
   inputBox.style.left=Math.min(sx,window.innerWidth-245)+"px";
   inputBox.style.top=Math.min(sy,window.innerHeight-235)+"px";
@@ -1337,10 +1336,11 @@ function closeIB(){ const v=ibText.value.trim(); if(v)(ibMode==="note"?draftN:dr
 document.getElementById("ibOk").onclick = async () => {
   if(!currentRoomId){ alert("広場を選択してください"); return; }
   const text=ibText.value.trim(); if(!text) return;
-  const name = currentUser ? (currentUser.user_metadata?.full_name || currentUser.email) : "名無し";
+  const name = ibName.value.trim() || "名無し";
+  if(name !== "名無し") localStorage.setItem("ib_nickname", name);
   const userId = currentUser ? currentUser.id : null;
   if(ibMode==="note"){
-    const ins={text,author:"",user_id:userId,color:ibColor.value,x:ibCX,y:ibCY,canvas_id:currentRoomId};
+    const ins={text,author:name,user_id:userId,color:ibColor.value,x:ibCX,y:ibCY,canvas_id:currentRoomId};
     if(pendingPin){ins.pin_x=pendingPin.pin_x;ins.pin_y=pendingPin.pin_y;}
     const {data:inserted,error}=await sb.from("notes").insert(ins).select().single();
     if(error){alert("付箋の作成に失敗しました: "+error.message);return;}
@@ -1350,7 +1350,7 @@ document.getElementById("ibOk").onclick = async () => {
     }
     pendingPin=null; draftN.length=0;
   } else {
-    const {data:inserted}=await sb.from("replies").insert({note_id:ibNoteId,text,author:"",user_id:userId,canvas_id:currentRoomId}).select().single();
+    const {data:inserted}=await sb.from("replies").insert({note_id:ibNoteId,text,author:name,user_id:userId,canvas_id:currentRoomId}).select().single();
     if(inserted) renderReply(inserted);
     draftR.length=0;
   }
