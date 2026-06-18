@@ -1340,7 +1340,7 @@ document.getElementById("ibOk").onclick = async () => {
   const name = currentUser ? (currentUser.user_metadata?.full_name || currentUser.email) : "名無し";
   const userId = currentUser ? currentUser.id : null;
   if(ibMode==="note"){
-    const ins={text,author:name,user_id:userId,color:ibColor.value,x:ibCX,y:ibCY,canvas_id:currentRoomId};
+    const ins={text,author:"",user_id:userId,color:ibColor.value,x:ibCX,y:ibCY,canvas_id:currentRoomId};
     if(pendingPin){ins.pin_x=pendingPin.pin_x;ins.pin_y=pendingPin.pin_y;}
     const {data:inserted,error}=await sb.from("notes").insert(ins).select().single();
     if(error){alert("付箋の作成に失敗しました: "+error.message);return;}
@@ -1350,7 +1350,7 @@ document.getElementById("ibOk").onclick = async () => {
     }
     pendingPin=null; draftN.length=0;
   } else {
-    const {data:inserted}=await sb.from("replies").insert({note_id:ibNoteId,text,author:name,user_id:userId,canvas_id:currentRoomId}).select().single();
+    const {data:inserted}=await sb.from("replies").insert({note_id:ibNoteId,text,author:"",user_id:userId,canvas_id:currentRoomId}).select().single();
     if(inserted) renderReply(inserted);
     draftR.length=0;
   }
@@ -1429,7 +1429,7 @@ function renderNote(row){
   const db=document.createElement("button"); db.className="note-del"; db.textContent="✕";
   db.onclick=async e=>{e.stopPropagation();if(confirm("この付箋を削除しますか？")){removeArrow(row.id);await sb.from("notes").delete().eq("id",row.id);}};
   const nt=document.createElement("div"); nt.className="note-text"; nt.textContent=row.text;
-  const na=document.createElement("div"); na.className="note-author"; na.textContent="— "+row.author;
+  const na=document.createElement("div"); na.className="note-author"; na.style.display="none";
   const rb=document.createElement("div"); rb.className="reply-btn"; rb.textContent="↩ 返信";
   const tb=document.createElement("div"); tb.className="toggle-btn";
   const rw=document.createElement("div"); rw.className="replies-wrap";
@@ -1445,7 +1445,7 @@ function renderReply(row){
   if(el.querySelector(`[data-rid="${row.id}"]`)) return;
   const rw=el.querySelector(".replies-wrap"),tb=el.querySelector(".toggle-btn");
   const ri=document.createElement("div"); ri.className="reply-item"; ri.dataset.rid=row.id;
-  const sp=document.createElement("span"); sp.textContent=row.text+" — "+row.author;
+  const sp=document.createElement("span"); sp.textContent=row.text;
   const db=document.createElement("button"); db.className="reply-del"; db.textContent="✕";
   db.onclick=async()=>{if(confirm("削除しますか？"))await sb.from("replies").delete().eq("id",row.id);};
   ri.append(sp,db); rw.appendChild(ri);
