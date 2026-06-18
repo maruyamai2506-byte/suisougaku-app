@@ -1429,7 +1429,7 @@ function renderNote(row){
   const db=document.createElement("button"); db.className="note-del"; db.textContent="✕";
   db.onclick=async e=>{e.stopPropagation();if(confirm("この付箋を削除しますか？")){removeArrow(row.id);await sb.from("notes").delete().eq("id",row.id);}};
   const nt=document.createElement("div"); nt.className="note-text"; nt.textContent=row.text;
-  const na=document.createElement("div"); na.className="note-author"; na.style.display="none";
+  const na=document.createElement("div"); na.className="note-author"; na.textContent="— "+(row.author||"名無し");
   const rb=document.createElement("div"); rb.className="reply-btn"; rb.textContent="↩ 返信";
   const tb=document.createElement("div"); tb.className="toggle-btn";
   const rw=document.createElement("div"); rw.className="replies-wrap";
@@ -1445,7 +1445,7 @@ function renderReply(row){
   if(el.querySelector(`[data-rid="${row.id}"]`)) return;
   const rw=el.querySelector(".replies-wrap"),tb=el.querySelector(".toggle-btn");
   const ri=document.createElement("div"); ri.className="reply-item"; ri.dataset.rid=row.id;
-  const sp=document.createElement("span"); sp.textContent=row.text;
+  const sp=document.createElement("span"); sp.textContent=row.text+(row.author?" — "+row.author:"");
   const db=document.createElement("button"); db.className="reply-del"; db.textContent="✕";
   db.onclick=async()=>{if(confirm("削除しますか？"))await sb.from("replies").delete().eq("id",row.id);};
   ri.append(sp,db); rw.appendChild(ri);
