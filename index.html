@@ -597,6 +597,79 @@ body.admin-mode .pdel{display:block;}
 }
 .hbtn:hover{background:var(--surface2);border-color:var(--accent);}
 .hbtn.on{background:var(--accent);color:#000;font-weight:700;border-color:var(--accent);}
+
+/* ── ホームタブ ── */
+.htab{
+  padding:10px 22px;background:none;border:none;
+  color:var(--text3);font-size:13px;font-family:'Noto Sans JP',sans-serif;
+  cursor:pointer;border-bottom:2px solid transparent;
+  transition:color .2s,border-color .2s;letter-spacing:.05em;
+  position:relative;top:1px;
+}
+.htab.active{color:var(--accent2);border-bottom-color:var(--accent2);}
+.htab:hover:not(.active){color:var(--text);}
+
+/* 分奏カード */
+.bs-card{
+  background:var(--surface);border:1px solid var(--border2);border-radius:12px;
+  overflow:hidden;transition:box-shadow .2s;
+}
+.bs-card:hover{box-shadow:0 4px 20px rgba(0,0,0,0.3);}
+.bs-card-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 18px;cursor:pointer;
+  border-bottom:1px solid var(--border);
+}
+.bs-card-title{font-size:14px;font-weight:700;color:var(--accent2);}
+.bs-card-meta{font-size:11px;color:var(--text3);margin-top:3px;}
+.bs-card-body{display:none;padding:0 0 12px;}
+.bs-card-body.open{display:block;}
+
+/* 分奏テーブル */
+.bs-table{width:100%;border-collapse:collapse;font-size:12px;}
+.bs-table th{
+  background:var(--surface2);color:var(--text2);
+  padding:8px 12px;text-align:left;font-weight:500;
+  border-bottom:1px solid var(--border);white-space:nowrap;
+}
+.bs-table td{
+  padding:6px 8px;border-bottom:1px solid var(--border);
+  vertical-align:top;
+}
+.bs-table tr:last-child td{border-bottom:none;}
+.bs-table td[contenteditable="true"]{
+  outline:none;min-width:80px;
+  transition:background .15s;
+}
+.bs-table td[contenteditable="true"]:focus{
+  background:var(--surface2);
+  box-shadow:inset 0 0 0 1px var(--accent3);
+}
+.bs-table .koma-num{
+  color:var(--accent);font-weight:700;text-align:center;
+  width:48px;font-size:13px;
+}
+.bs-add-row{
+  margin:10px 18px 0;padding:6px 14px;
+  background:none;border:1px dashed var(--border2);
+  border-radius:6px;color:var(--text3);font-size:12px;
+  cursor:pointer;font-family:'Noto Sans JP',sans-serif;
+  transition:color .15s,border-color .15s;
+}
+.bs-add-row:hover{color:var(--text);border-color:var(--text2);}
+.bs-del-btn{
+  background:none;border:none;color:var(--text3);
+  font-size:14px;cursor:pointer;padding:2px 6px;
+  border-radius:4px;
+}
+.bs-del-btn:hover{color:var(--danger);}
+.bs-card-del{
+  background:none;border:none;color:var(--text3);
+  font-size:11px;cursor:pointer;padding:4px 8px;
+  border-radius:5px;border:1px solid var(--border);
+}
+.bs-card-del:hover{color:var(--danger);border-color:var(--danger);}
+
 </style>
 </head>
 <body>
@@ -675,6 +748,13 @@ body.admin-mode .pdel{display:block;}
     </div>
   </div>
 
+
+  <!-- タブナビゲーション -->
+  <div id="homeTabs" style="position:relative;z-index:1;display:flex;gap:0;padding:0 48px;flex-shrink:0;border-bottom:1px solid var(--border);margin-bottom:0;">
+    <button class="htab active" id="tabPlaza" onclick="switchHomeTab('plaza')">🎵 意見広場</button>
+    <button class="htab" id="tabBunsou" onclick="switchHomeTab('bunsou')">📋 分奏表</button>
+  </div>
+
   <!-- ランダムコメント -->
   <div id="randomSection" style="display:none;">
     <div id="randomLabel">今日のひとこと</div>
@@ -693,6 +773,16 @@ body.admin-mode .pdel{display:block;}
         <div class="room-add-text">新しい広場を作る</div>
       </div>
     </div>
+  </div>
+
+
+  <!-- 分奏表セクション -->
+  <div id="bunsouSection" style="display:none;position:relative;z-index:1;flex:1;overflow-y:auto;padding:24px 48px 40px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div style="font-family:'Noto Serif JP',serif;font-size:15px;color:var(--text2);letter-spacing:.1em;">分奏記録</div>
+      <button id="btnAddBunsou" style="padding:8px 18px;background:var(--accent);color:#1a1200;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Noto Sans JP',sans-serif;">＋ 新しい分奏表</button>
+    </div>
+    <div id="bunsouGrid" style="display:flex;flex-direction:column;gap:10px;"></div>
   </div>
 
   <!-- ROOM CREATE MODAL（homeScreen内） -->
@@ -721,6 +811,24 @@ body.admin-mode .pdel{display:block;}
       <div class="mr">
         <button class="mpri" id="rmOk">作成する</button>
         <button id="rmCancel">キャンセル</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- 分奏表作成モーダル -->
+  <div class="home-modal" id="bunsouModal" style="position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,0.75);display:none;align-items:center;justify-content:center;backdrop-filter:blur(6px);">
+    <div class="mbox" style="width:400px">
+      <h3>📋 新しい分奏表</h3>
+      <label>日時</label>
+      <input id="bsDate" type="datetime-local">
+      <label>コマ数</label>
+      <input id="bsKoma" type="number" min="1" max="20" placeholder="例：3" style="width:100px;">
+      <label>パート</label>
+      <input id="bsPart" placeholder="例：Tp, Cl, 全体">
+      <div class="mr">
+        <button class="mpri" id="bsOk">作成する</button>
+        <button id="bsCancel">キャンセル</button>
       </div>
     </div>
   </div>
@@ -999,6 +1107,193 @@ function goHome(){
   }
   showHome();
 }
+
+
+// ══════════════════════════════════════════════
+//  タブ切替
+// ══════════════════════════════════════════════
+function switchHomeTab(tab){
+  const isPlaza = tab === 'plaza';
+  document.getElementById('tabPlaza').classList.toggle('active', isPlaza);
+  document.getElementById('tabBunsou').classList.toggle('active', !isPlaza);
+  document.getElementById('randomSection').style.display = isPlaza ? '' : 'none';
+  document.getElementById('roomsSection').style.display = isPlaza ? '' : 'none';
+  document.getElementById('bunsouSection').style.display = isPlaza ? 'none' : '';
+  if(!isPlaza) loadBunsouList();
+}
+
+// ══════════════════════════════════════════════
+//  分奏表 — CRUD
+// ══════════════════════════════════════════════
+let bunsouSessions = [];
+let bsSaveTimers = {};
+
+// 分奏表一覧を読み込み
+async function loadBunsouList(){
+  const {data} = await sb.from('bunsou_sessions')
+    .select('id,title,session_date,part,koma_count,created_at')
+    .order('session_date',{ascending:false});
+  bunsouSessions = data || [];
+  renderBunsouList();
+}
+
+function renderBunsouList(){
+  const grid = document.getElementById('bunsouGrid');
+  grid.innerHTML = '';
+  if(bunsouSessions.length === 0){
+    grid.innerHTML = '<div style="text-align:center;padding:48px;color:var(--text3);font-size:13px;">まだ分奏表がありません<br>「＋ 新しい分奏表」で作成してください</div>';
+    return;
+  }
+  for(const s of bunsouSessions){
+    const card = document.createElement('div');
+    card.className = 'bs-card';
+    card.id = 'bscard-' + s.id;
+    const d = s.session_date ? new Date(s.session_date).toLocaleString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}) : '日時未設定';
+    card.innerHTML = `
+      <div class="bs-card-header" onclick="toggleBsCard('${s.id}')">
+        <div>
+          <div class="bs-card-title">📋 ${s.title||d}</div>
+          <div class="bs-card-meta">${d}　|　パート：${s.part||'未設定'}　|　${s.koma_count}コマ</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button class="bs-card-del" onclick="event.stopPropagation();deleteBunsouSession('${s.id}')">削除</button>
+          <span style="color:var(--text3);font-size:12px;">▼</span>
+        </div>
+      </div>
+      <div class="bs-card-body" id="bsbody-${s.id}"></div>
+    `;
+    grid.appendChild(card);
+  }
+}
+
+async function toggleBsCard(sid){
+  const body = document.getElementById('bsbody-'+sid);
+  if(body.classList.contains('open')){
+    body.classList.remove('open');
+    return;
+  }
+  body.classList.add('open');
+  if(body.dataset.loaded) return;
+  body.dataset.loaded = '1';
+  await loadBunsouRows(sid);
+}
+
+async function loadBunsouRows(sid){
+  const body = document.getElementById('bsbody-'+sid);
+  const session = bunsouSessions.find(s=>s.id===sid);
+  const {data:rows} = await sb.from('bunsou_rows')
+    .select('*').eq('session_id',sid).order('koma_num',{ascending:true});
+  renderBunsouTable(body, sid, session, rows||[]);
+}
+
+function renderBunsouTable(body, sid, session, rows){
+  body.innerHTML = `
+    <div style="overflow-x:auto;">
+    <table class="bs-table">
+      <thead>
+        <tr>
+          <th style="width:48px">コマ</th>
+          <th style="min-width:140px">目的・練習内容</th>
+          <th style="min-width:200px">アドバイス・気づき</th>
+          <th style="min-width:100px">備考</th>
+          <th style="width:36px"></th>
+        </tr>
+      </thead>
+      <tbody id="bstbody-${sid}">
+      </tbody>
+    </table>
+    </div>
+    <button class="bs-add-row" onclick="addBunsouRow('${sid}')">＋ 行を追加</button>
+  `;
+  const tbody = document.getElementById('bstbody-'+sid);
+  for(const row of rows) appendBsRow(tbody, sid, row);
+  // 行がなければ自動で koma_count 分作成
+  if(rows.length === 0 && session){
+    for(let i=1; i<=session.koma_count; i++) addBunsouRow(sid, i);
+  }
+}
+
+function appendBsRow(tbody, sid, row){
+  const tr = document.createElement('tr');
+  tr.id = 'bsrow-'+row.id;
+  tr.innerHTML = `
+    <td class="koma-num">${row.koma_num}</td>
+    <td contenteditable="true" data-field="purpose" data-id="${row.id}" data-sid="${sid}">${row.purpose||''}</td>
+    <td contenteditable="true" data-field="advice" data-id="${row.id}" data-sid="${sid}">${row.advice||''}</td>
+    <td contenteditable="true" data-field="memo" data-id="${row.id}" data-sid="${sid}">${row.memo||''}</td>
+    <td><button class="bs-del-btn" onclick="deleteBunsouRow('${row.id}','${sid}')">✕</button></td>
+  `;
+  // セル編集→自動保存（デバウンス500ms）
+  tr.querySelectorAll('[contenteditable]').forEach(td=>{
+    td.addEventListener('input', ()=>{
+      const id = td.dataset.id;
+      clearTimeout(bsSaveTimers[id+'_'+td.dataset.field]);
+      bsSaveTimers[id+'_'+td.dataset.field] = setTimeout(()=>saveBsCell(td), 500);
+    });
+  });
+  tbody.appendChild(tr);
+}
+
+async function saveBsCell(td){
+  const {id, field} = td.dataset;
+  await sb.from('bunsou_rows').update({[field]: td.textContent.trim()}).eq('id', id);
+}
+
+async function addBunsouRow(sid, komaNum){
+  const tbody = document.getElementById('bstbody-'+sid);
+  const session = bunsouSessions.find(s=>s.id===sid);
+  const existingRows = tbody ? tbody.querySelectorAll('tr').length : 0;
+  const koma = komaNum || (existingRows + 1);
+  const {data:row} = await sb.from('bunsou_rows')
+    .insert({session_id:sid, koma_num:koma, purpose:'', advice:'', memo:''})
+    .select().single();
+  if(row && tbody) appendBsRow(tbody, sid, row);
+}
+
+async function deleteBunsouRow(rowId, sid){
+  await sb.from('bunsou_rows').delete().eq('id', rowId);
+  const tr = document.getElementById('bsrow-'+rowId);
+  if(tr) tr.remove();
+}
+
+async function deleteBunsouSession(sid){
+  if(!confirm('この分奏表を削除しますか？')) return;
+  await sb.from('bunsou_rows').delete().eq('session_id', sid);
+  await sb.from('bunsou_sessions').delete().eq('id', sid);
+  document.getElementById('bscard-'+sid)?.remove();
+  bunsouSessions = bunsouSessions.filter(s=>s.id!==sid);
+}
+
+// 分奏表作成モーダル
+document.getElementById('btnAddBunsou').onclick = ()=>{
+  // 日時デフォルトを今に
+  const now = new Date();
+  now.setMinutes(0,0,0);
+  document.getElementById('bsDate').value = now.toISOString().slice(0,16);
+  document.getElementById('bsKoma').value = '';
+  document.getElementById('bsPart').value = '';
+  document.getElementById('bunsouModal').style.display = 'flex';
+};
+document.getElementById('bsCancel').onclick = ()=>{ document.getElementById('bunsouModal').style.display='none'; };
+document.getElementById('bsOk').onclick = async ()=>{
+  const date = document.getElementById('bsDate').value;
+  const koma = parseInt(document.getElementById('bsKoma').value)||1;
+  const part = document.getElementById('bsPart').value.trim();
+  if(!date){ alert('日時を入力してください'); return; }
+  const title = new Date(date).toLocaleDateString('ja-JP',{month:'long',day:'numeric'}) + ' 分奏';
+  const {data:session} = await sb.from('bunsou_sessions')
+    .insert({title, session_date:date, part, koma_count:koma, created_by: currentUser?.id})
+    .select().single();
+  document.getElementById('bunsouModal').style.display='none';
+  if(session){
+    bunsouSessions.unshift(session);
+    renderBunsouList();
+    // 自動でコマ分の行を作成
+    for(let i=1; i<=koma; i++) await addBunsouRow(session.id, i);
+    // 作ったカードを開く
+    toggleBsCard(session.id);
+  }
+};
 
 // ══════════════════════════════════════════════
 //  Rooms (広場) — CRUD
