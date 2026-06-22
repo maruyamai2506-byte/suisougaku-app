@@ -670,6 +670,15 @@ body.admin-mode .pdel{display:block;}
 }
 .bs-card-del:hover{color:var(--danger);border-color:var(--danger);}
 
+
+/* パート選択セル */
+.bs-part-sel{
+  width:100%;background:var(--surface2);color:var(--text);
+  border:1px solid var(--border);border-radius:5px;
+  padding:5px 6px;font-size:12px;font-family:'Noto Sans JP',sans-serif;
+  cursor:pointer;outline:none;
+}
+.bs-part-sel:focus{border-color:var(--accent3);}
 </style>
 </head>
 <body>
@@ -824,8 +833,6 @@ body.admin-mode .pdel{display:block;}
       <input id="bsDate" type="datetime-local">
       <label>コマ数</label>
       <input id="bsKoma" type="number" min="1" max="20" placeholder="例：3" style="width:100px;">
-      <label>パート</label>
-      <input id="bsPart" placeholder="例：Tp, Cl, 全体">
       <div class="mr">
         <button class="mpri" id="bsOk">作成する</button>
         <button id="bsCancel">キャンセル</button>
@@ -1186,15 +1193,39 @@ async function loadBunsouRows(sid){
   renderBunsouTable(body, sid, session, rows||[]);
 }
 
+// パート選択のオプションHTML
+const PART_OPTIONS = [
+  {group:'木管楽器 ― フルート/ピッコロ/オーボエ/ファゴット', parts:['フルート','ピッコロ','オーボエ','ファゴット']},
+  {group:'木管楽器 ― クラリネット', parts:['E♭クラリネット','クラリネット','バスクラリネット']},
+  {group:'木管楽器 ― サックス', parts:['ソプラノサックス','アルトサックス','テナーサックス','バリトンサックス']},
+  {group:'金管楽器 ― トランペット', parts:['ピッコロトランペット','トランペット','コルネット']},
+  {group:'金管楽器 ― ホルン/ユーフォ/チューバ', parts:['フレンチホルン','ユーフォニアム','チューバ']},
+  {group:'金管楽器 ― トロンボーン', parts:['トロンボーン','バストロンボーン']},
+  {group:'その他', parts:['コントラバス','パーカッション','全体']}
+];
+
+function buildPartSelect(rowId, sid, selected){
+  let opts = '<option value="">パートを選択</option>';
+  for(const g of PART_OPTIONS){
+    opts += `<optgroup label="${g.group}">`;
+    for(const p of g.parts){
+      opts += `<option value="${p}" ${selected===p?'selected':''}>${p}</option>`;
+    }
+    opts += '</optgroup>';
+  }
+  return `<select class="bs-part-sel" data-field="part" data-id="${rowId}" data-sid="${sid}" onchange="saveBsSelect(this)">${opts}</select>`;
+}
+
 function renderBunsouTable(body, sid, session, rows){
   body.innerHTML = `
     <div style="overflow-x:auto;">
     <table class="bs-table">
       <thead>
         <tr>
-          <th style="width:48px">コマ</th>
-          <th style="min-width:140px">目的・練習内容</th>
-          <th style="min-width:200px">アドバイス・気づき</th>
+          <th style="width:44px">コマ</th>
+          <th style="min-width:150px">パート</th>
+          <th style="min-width:160px">目的・練習内容</th>
+          <th style="min-width:220px">アドバイス・気づき</th>
           <th style="min-width:100px">備考</th>
           <th style="width:36px"></th>
         </tr>
@@ -1207,10 +1238,14 @@ function renderBunsouTable(body, sid, session, rows){
   `;
   const tbody = document.getElementById('bstbody-'+sid);
   for(const row of rows) appendBsRow(tbody, sid, row);
-  // 行がなければ自動で koma_count 分作成
   if(rows.length === 0 && session){
     for(let i=1; i<=session.koma_count; i++) addBunsouRow(sid, i);
   }
+}
+
+async function saveBsSelect(sel){
+  const {id, field} = sel.dataset;
+  await sb.from('bunsou_rows').update({[field]: sel.value}).eq('id', id);
 }
 
 function appendBsRow(tbody, sid, row){
@@ -1218,12 +1253,12 @@ function appendBsRow(tbody, sid, row){
   tr.id = 'bsrow-'+row.id;
   tr.innerHTML = `
     <td class="koma-num">${row.koma_num}</td>
+    <td style="padding:4px 6px;">${buildPartSelect(row.id, sid, row.part||'')}</td>
     <td contenteditable="true" data-field="purpose" data-id="${row.id}" data-sid="${sid}">${row.purpose||''}</td>
     <td contenteditable="true" data-field="advice" data-id="${row.id}" data-sid="${sid}">${row.advice||''}</td>
     <td contenteditable="true" data-field="memo" data-id="${row.id}" data-sid="${sid}">${row.memo||''}</td>
     <td><button class="bs-del-btn" onclick="deleteBunsouRow('${row.id}','${sid}')">✕</button></td>
   `;
-  // セル編集→自動保存（デバウンス500ms）
   tr.querySelectorAll('[contenteditable]').forEach(td=>{
     td.addEventListener('input', ()=>{
       const id = td.dataset.id;
@@ -1271,18 +1306,16 @@ document.getElementById('btnAddBunsou').onclick = ()=>{
   now.setMinutes(0,0,0);
   document.getElementById('bsDate').value = now.toISOString().slice(0,16);
   document.getElementById('bsKoma').value = '';
-  document.getElementById('bsPart').value = '';
   document.getElementById('bunsouModal').style.display = 'flex';
 };
 document.getElementById('bsCancel').onclick = ()=>{ document.getElementById('bunsouModal').style.display='none'; };
 document.getElementById('bsOk').onclick = async ()=>{
   const date = document.getElementById('bsDate').value;
   const koma = parseInt(document.getElementById('bsKoma').value)||1;
-  const part = document.getElementById('bsPart').value.trim();
   if(!date){ alert('日時を入力してください'); return; }
   const title = new Date(date).toLocaleDateString('ja-JP',{month:'long',day:'numeric'}) + ' 分奏';
   const {data:session} = await sb.from('bunsou_sessions')
-    .insert({title, session_date:date, part, koma_count:koma, created_by: currentUser?.id})
+    .insert({title, session_date:date, koma_count:koma, created_by: currentUser?.id})
     .select().single();
   document.getElementById('bunsouModal').style.display='none';
   if(session){
