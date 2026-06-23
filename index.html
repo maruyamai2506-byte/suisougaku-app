@@ -671,14 +671,52 @@ body.admin-mode .pdel{display:block;}
 .bs-card-del:hover{color:var(--danger);border-color:var(--danger);}
 
 
-/* パート選択セル */
-.bs-part-sel{
-  width:100%;background:var(--surface2);color:var(--text);
-  border:1px solid var(--border);border-radius:5px;
-  padding:5px 6px;font-size:12px;font-family:'Noto Sans JP',sans-serif;
-  cursor:pointer;outline:none;
+
+/* タグ式パート選択 */
+.bs-tag-wrap{display:flex;flex-wrap:wrap;gap:4px;align-items:center;min-height:30px;padding:2px;}
+.bs-tag{
+  display:inline-flex;align-items:center;gap:3px;
+  background:var(--accent3);color:var(--bg);
+  border-radius:20px;padding:2px 8px 2px 10px;font-size:11px;font-weight:600;
+  white-space:nowrap;
 }
-.bs-part-sel:focus{border-color:var(--accent3);}
+.bs-tag-rm{
+  background:none;border:none;color:inherit;cursor:pointer;
+  font-size:12px;padding:0;line-height:1;opacity:.7;
+}
+.bs-tag-rm:hover{opacity:1;}
+.bs-tag-add{
+  background:none;border:1px dashed var(--border2);border-radius:20px;
+  color:var(--text3);font-size:11px;padding:2px 8px;cursor:pointer;
+  font-family:'Noto Sans JP',sans-serif;
+}
+.bs-tag-add:hover{color:var(--text);border-color:var(--text2);}
+
+/* パートピッカー */
+.bs-part-picker{
+  position:absolute;z-index:500;
+  background:var(--surface);border:1px solid var(--border2);
+  border-radius:10px;padding:6px;
+  box-shadow:0 8px 32px rgba(0,0,0,0.4);
+  max-height:280px;overflow-y:auto;min-width:180px;
+}
+.bs-picker-group{
+  font-size:10px;color:var(--text3);padding:6px 8px 2px;
+  letter-spacing:.05em;font-weight:600;
+}
+.bs-picker-item{
+  display:block;width:100%;text-align:left;
+  background:none;border:none;color:var(--text);
+  font-size:12px;padding:5px 10px;cursor:pointer;border-radius:5px;
+  font-family:'Noto Sans JP',sans-serif;
+}
+.bs-picker-item:hover{background:var(--surface2);}
+
+/* 検索バーinput focus */
+#bsSearchText:focus, #bsSearchPart:focus, #bsSearchDate:focus{
+  border-color:var(--accent3);
+}
+
 </style>
 </head>
 <body>
@@ -787,10 +825,41 @@ body.admin-mode .pdel{display:block;}
 
   <!-- 分奏表セクション -->
   <div id="bunsouSection" style="display:none;position:relative;z-index:1;flex:1;overflow-y:auto;padding:24px 48px 40px;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
       <div style="font-family:'Noto Serif JP',serif;font-size:15px;color:var(--text2);letter-spacing:.1em;">分奏記録</div>
       <button id="btnAddBunsou" style="padding:8px 18px;background:var(--accent);color:#1a1200;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Noto Sans JP',sans-serif;">＋ 新しい分奏表</button>
     </div>
+    <!-- 検索バー -->
+    <div id="bsSearchBar" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;align-items:center;">
+      <input id="bsSearchText" type="text" placeholder="🔍 目的・アドバイスをキーワード検索" style="flex:1;min-width:180px;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12px;font-family:'Noto Sans JP',sans-serif;outline:none;">
+      <select id="bsSearchPart" style="padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12px;font-family:'Noto Sans JP',sans-serif;outline:none;">
+        <option value="">すべてのパート</option>
+        <optgroup label="木管楽器 ― フルート/ピッコロ/オーボエ/ファゴット">
+          <option>フルート</option><option>ピッコロ</option><option>オーボエ</option><option>ファゴット</option>
+        </optgroup>
+        <optgroup label="木管楽器 ― クラリネット">
+          <option>E♭クラリネット</option><option>クラリネット</option><option>バスクラリネット</option>
+        </optgroup>
+        <optgroup label="木管楽器 ― サックス">
+          <option>ソプラノサックス</option><option>アルトサックス</option><option>テナーサックス</option><option>バリトンサックス</option>
+        </optgroup>
+        <optgroup label="金管楽器 ― トランペット">
+          <option>ピッコロトランペット</option><option>トランペット</option><option>コルネット</option>
+        </optgroup>
+        <optgroup label="金管楽器 ― ホルン/ユーフォ/チューバ">
+          <option>フレンチホルン</option><option>ユーフォニアム</option><option>チューバ</option>
+        </optgroup>
+        <optgroup label="金管楽器 ― トロンボーン">
+          <option>トロンボーン</option><option>バストロンボーン</option>
+        </optgroup>
+        <optgroup label="その他">
+          <option>コントラバス</option><option>パーカッション</option><option>全体</option>
+        </optgroup>
+      </select>
+      <input id="bsSearchDate" type="date" style="padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12px;font-family:'Noto Sans JP',sans-serif;outline:none;">
+      <button id="bsSearchClear" style="padding:8px 12px;background:none;border:1px solid var(--border);border-radius:8px;color:var(--text3);font-size:12px;cursor:pointer;font-family:'Noto Sans JP',sans-serif;">クリア</button>
+    </div>
+    <div id="bsSearchResult" style="display:none;margin-bottom:12px;padding:10px 14px;background:var(--surface2);border-radius:8px;font-size:12px;color:var(--text2);"></div>
     <div id="bunsouGrid" style="display:flex;flex-direction:column;gap:10px;"></div>
   </div>
 
@@ -1136,22 +1205,36 @@ let bunsouSessions = [];
 let bsSaveTimers = {};
 
 // 分奏表一覧を読み込み
+// ── パート定義 ──────────────────────────────────
+const PART_OPTIONS = [
+  {group:'木管楽器 ― フルート/ピッコロ/オーボエ/ファゴット', parts:['フルート','ピッコロ','オーボエ','ファゴット']},
+  {group:'木管楽器 ― クラリネット', parts:['E♭クラリネット','クラリネット','バスクラリネット']},
+  {group:'木管楽器 ― サックス', parts:['ソプラノサックス','アルトサックス','テナーサックス','バリトンサックス']},
+  {group:'金管楽器 ― トランペット', parts:['ピッコロトランペット','トランペット','コルネット']},
+  {group:'金管楽器 ― ホルン/ユーフォ/チューバ', parts:['フレンチホルン','ユーフォニアム','チューバ']},
+  {group:'金管楽器 ― トロンボーン', parts:['トロンボーン','バストロンボーン']},
+  {group:'その他', parts:['コントラバス','パーカッション','全体']}
+];
+const ALL_PARTS = PART_OPTIONS.flatMap(g=>g.parts);
+
+// ── 分奏表一覧 ───────────────────────────────────
 async function loadBunsouList(){
   const {data} = await sb.from('bunsou_sessions')
-    .select('id,title,session_date,part,koma_count,created_at')
+    .select('id,title,session_date,koma_count,created_at')
     .order('session_date',{ascending:false});
   bunsouSessions = data || [];
   renderBunsouList();
 }
 
-function renderBunsouList(){
+function renderBunsouList(sessions){
+  const list = sessions || bunsouSessions;
   const grid = document.getElementById('bunsouGrid');
   grid.innerHTML = '';
-  if(bunsouSessions.length === 0){
-    grid.innerHTML = '<div style="text-align:center;padding:48px;color:var(--text3);font-size:13px;">まだ分奏表がありません<br>「＋ 新しい分奏表」で作成してください</div>';
+  if(list.length === 0){
+    grid.innerHTML = '<div style="text-align:center;padding:48px;color:var(--text3);font-size:13px;">該当する分奏表がありません</div>';
     return;
   }
-  for(const s of bunsouSessions){
+  for(const s of list){
     const card = document.createElement('div');
     card.className = 'bs-card';
     card.id = 'bscard-' + s.id;
@@ -1160,7 +1243,7 @@ function renderBunsouList(){
       <div class="bs-card-header" onclick="toggleBsCard('${s.id}')">
         <div>
           <div class="bs-card-title">📋 ${s.title||d}</div>
-          <div class="bs-card-meta">${d}　|　パート：${s.part||'未設定'}　|　${s.koma_count}コマ</div>
+          <div class="bs-card-meta">${d}　|　${s.koma_count}コマ</div>
         </div>
         <div style="display:flex;gap:8px;align-items:center;">
           <button class="bs-card-del" onclick="event.stopPropagation();deleteBunsouSession('${s.id}')">削除</button>
@@ -1175,10 +1258,7 @@ function renderBunsouList(){
 
 async function toggleBsCard(sid){
   const body = document.getElementById('bsbody-'+sid);
-  if(body.classList.contains('open')){
-    body.classList.remove('open');
-    return;
-  }
+  if(body.classList.contains('open')){body.classList.remove('open');return;}
   body.classList.add('open');
   if(body.dataset.loaded) return;
   body.dataset.loaded = '1';
@@ -1193,59 +1273,97 @@ async function loadBunsouRows(sid){
   renderBunsouTable(body, sid, session, rows||[]);
 }
 
-// パート選択のオプションHTML
-const PART_OPTIONS = [
-  {group:'木管楽器 ― フルート/ピッコロ/オーボエ/ファゴット', parts:['フルート','ピッコロ','オーボエ','ファゴット']},
-  {group:'木管楽器 ― クラリネット', parts:['E♭クラリネット','クラリネット','バスクラリネット']},
-  {group:'木管楽器 ― サックス', parts:['ソプラノサックス','アルトサックス','テナーサックス','バリトンサックス']},
-  {group:'金管楽器 ― トランペット', parts:['ピッコロトランペット','トランペット','コルネット']},
-  {group:'金管楽器 ― ホルン/ユーフォ/チューバ', parts:['フレンチホルン','ユーフォニアム','チューバ']},
-  {group:'金管楽器 ― トロンボーン', parts:['トロンボーン','バストロンボーン']},
-  {group:'その他', parts:['コントラバス','パーカッション','全体']}
-];
-
-function buildPartSelect(rowId, sid, selected){
-  let opts = '<option value="">パートを選択</option>';
-  for(const g of PART_OPTIONS){
-    opts += `<optgroup label="${g.group}">`;
-    for(const p of g.parts){
-      opts += `<option value="${p}" ${selected===p?'selected':''}>${p}</option>`;
-    }
-    opts += '</optgroup>';
-  }
-  return `<select class="bs-part-sel" data-field="part" data-id="${rowId}" data-sid="${sid}" onchange="saveBsSelect(this)">${opts}</select>`;
+// ── タグ式パート選択 ──────────────────────────────
+function buildPartTags(rowId, selectedArr){
+  // selectedArr は配列 (DB は text[] か JSON文字列)
+  const sel = Array.isArray(selectedArr) ? selectedArr
+    : (typeof selectedArr==='string' && selectedArr.startsWith('['))
+      ? JSON.parse(selectedArr) : (selectedArr ? [selectedArr] : []);
+  const tagsHtml = sel.map(p=>`<span class="bs-tag">${p}<button class="bs-tag-rm" onclick="removePartTag('${rowId}',this,'${p}')">×</button></span>`).join('');
+  return `<div class="bs-tag-wrap" id="bstags-${rowId}">${tagsHtml}<button class="bs-tag-add" onclick="openPartPicker('${rowId}')">＋</button></div>`;
 }
 
+function openPartPicker(rowId){
+  // すでに開いていたら閉じる
+  document.querySelectorAll('.bs-part-picker').forEach(p=>p.remove());
+  const wrap = document.getElementById('bstags-'+rowId);
+  if(!wrap) return;
+  const picker = document.createElement('div');
+  picker.className = 'bs-part-picker';
+  for(const g of PART_OPTIONS){
+    const grpLabel = document.createElement('div');
+    grpLabel.className = 'bs-picker-group';
+    grpLabel.textContent = g.group;
+    picker.appendChild(grpLabel);
+    for(const p of g.parts){
+      const btn = document.createElement('button');
+      btn.className = 'bs-picker-item';
+      btn.textContent = p;
+      btn.onclick = ()=>{ addPartTag(rowId, p); picker.remove(); };
+      picker.appendChild(btn);
+    }
+  }
+  wrap.appendChild(picker);
+  // 外クリックで閉じる
+  setTimeout(()=>document.addEventListener('click', function h(e){
+    if(!picker.contains(e.target)){picker.remove();document.removeEventListener('click',h);}
+  }),10);
+}
+
+function getCurrentParts(rowId){
+  const wrap = document.getElementById('bstags-'+rowId);
+  if(!wrap) return [];
+  return [...wrap.querySelectorAll('.bs-tag')].map(t=>t.childNodes[0].textContent.trim());
+}
+
+async function addPartTag(rowId, part){
+  const parts = getCurrentParts(rowId);
+  if(parts.includes(part)) return;
+  parts.push(part);
+  await savePartTags(rowId, parts);
+  refreshPartTags(rowId, parts);
+}
+
+async function removePartTag(rowId, btn, part){
+  const parts = getCurrentParts(rowId).filter(p=>p!==part);
+  await savePartTags(rowId, parts);
+  refreshPartTags(rowId, parts);
+}
+
+async function savePartTags(rowId, parts){
+  await sb.from('bunsou_rows').update({parts: JSON.stringify(parts)}).eq('id', rowId);
+}
+
+function refreshPartTags(rowId, parts){
+  const wrap = document.getElementById('bstags-'+rowId);
+  if(!wrap) return;
+  wrap.innerHTML = parts.map(p=>`<span class="bs-tag">${p}<button class="bs-tag-rm" onclick="removePartTag('${rowId}',this,'${p}')">×</button></span>`).join('')
+    + `<button class="bs-tag-add" onclick="openPartPicker('${rowId}')">＋</button>`;
+}
+
+// ── テーブル描画 ──────────────────────────────────
 function renderBunsouTable(body, sid, session, rows){
   body.innerHTML = `
     <div style="overflow-x:auto;">
     <table class="bs-table">
-      <thead>
-        <tr>
-          <th style="width:44px">コマ</th>
-          <th style="min-width:150px">パート</th>
-          <th style="min-width:160px">目的・練習内容</th>
-          <th style="min-width:220px">アドバイス・気づき</th>
-          <th style="min-width:100px">備考</th>
-          <th style="width:36px"></th>
-        </tr>
-      </thead>
-      <tbody id="bstbody-${sid}">
-      </tbody>
+      <thead><tr>
+        <th style="width:44px">コマ</th>
+        <th style="min-width:180px">パート</th>
+        <th style="min-width:160px">目的・練習内容</th>
+        <th style="min-width:220px">アドバイス・気づき</th>
+        <th style="min-width:100px">備考</th>
+        <th style="width:36px"></th>
+      </tr></thead>
+      <tbody id="bstbody-${sid}"></tbody>
     </table>
     </div>
     <button class="bs-add-row" onclick="addBunsouRow('${sid}')">＋ 行を追加</button>
   `;
   const tbody = document.getElementById('bstbody-'+sid);
   for(const row of rows) appendBsRow(tbody, sid, row);
-  if(rows.length === 0 && session){
-    for(let i=1; i<=session.koma_count; i++) addBunsouRow(sid, i);
+  if(rows.length===0 && session){
+    for(let i=1;i<=session.koma_count;i++) addBunsouRow(sid,i);
   }
-}
-
-async function saveBsSelect(sel){
-  const {id, field} = sel.dataset;
-  await sb.from('bunsou_rows').update({[field]: sel.value}).eq('id', id);
 }
 
 function appendBsRow(tbody, sid, row){
@@ -1253,43 +1371,116 @@ function appendBsRow(tbody, sid, row){
   tr.id = 'bsrow-'+row.id;
   tr.innerHTML = `
     <td class="koma-num">${row.koma_num}</td>
-    <td style="padding:4px 6px;">${buildPartSelect(row.id, sid, row.part||'')}</td>
-    <td contenteditable="true" data-field="purpose" data-id="${row.id}" data-sid="${sid}">${row.purpose||''}</td>
-    <td contenteditable="true" data-field="advice" data-id="${row.id}" data-sid="${sid}">${row.advice||''}</td>
-    <td contenteditable="true" data-field="memo" data-id="${row.id}" data-sid="${sid}">${row.memo||''}</td>
+    <td style="padding:4px 6px;">${buildPartTags(row.id, row.parts||'[]')}</td>
+    <td contenteditable="true" data-field="purpose" data-id="${row.id}">${row.purpose||''}</td>
+    <td contenteditable="true" data-field="advice" data-id="${row.id}">${row.advice||''}</td>
+    <td contenteditable="true" data-field="memo" data-id="${row.id}">${row.memo||''}</td>
     <td><button class="bs-del-btn" onclick="deleteBunsouRow('${row.id}','${sid}')">✕</button></td>
   `;
   tr.querySelectorAll('[contenteditable]').forEach(td=>{
-    td.addEventListener('input', ()=>{
-      const id = td.dataset.id;
-      clearTimeout(bsSaveTimers[id+'_'+td.dataset.field]);
-      bsSaveTimers[id+'_'+td.dataset.field] = setTimeout(()=>saveBsCell(td), 500);
+    td.addEventListener('input',()=>{
+      clearTimeout(bsSaveTimers[td.dataset.id+'_'+td.dataset.field]);
+      bsSaveTimers[td.dataset.id+'_'+td.dataset.field]=setTimeout(()=>saveBsCell(td),500);
     });
   });
   tbody.appendChild(tr);
 }
 
 async function saveBsCell(td){
-  const {id, field} = td.dataset;
-  await sb.from('bunsou_rows').update({[field]: td.textContent.trim()}).eq('id', id);
+  await sb.from('bunsou_rows').update({[td.dataset.field]:td.textContent.trim()}).eq('id',td.dataset.id);
 }
 
 async function addBunsouRow(sid, komaNum){
   const tbody = document.getElementById('bstbody-'+sid);
-  const session = bunsouSessions.find(s=>s.id===sid);
   const existingRows = tbody ? tbody.querySelectorAll('tr').length : 0;
-  const koma = komaNum || (existingRows + 1);
+  const koma = komaNum||(existingRows+1);
   const {data:row} = await sb.from('bunsou_rows')
-    .insert({session_id:sid, koma_num:koma, purpose:'', advice:'', memo:''})
+    .insert({session_id:sid,koma_num:koma,purpose:'',advice:'',memo:'',parts:'[]'})
     .select().single();
   if(row && tbody) appendBsRow(tbody, sid, row);
 }
 
 async function deleteBunsouRow(rowId, sid){
-  await sb.from('bunsou_rows').delete().eq('id', rowId);
-  const tr = document.getElementById('bsrow-'+rowId);
-  if(tr) tr.remove();
+  await sb.from('bunsou_rows').delete().eq('id',rowId);
+  document.getElementById('bsrow-'+rowId)?.remove();
 }
+
+// ── 検索 ─────────────────────────────────────────
+let bsSearchActive = false;
+
+async function runBunsouSearch(){
+  const keyword = document.getElementById('bsSearchText').value.trim().toLowerCase();
+  const part = document.getElementById('bsSearchPart').value;
+  const date = document.getElementById('bsSearchDate').value; // YYYY-MM-DD
+
+  if(!keyword && !part && !date){
+    clearBunsouSearch(); return;
+  }
+  bsSearchActive = true;
+
+  // rowsを横断検索
+  let rowQuery = sb.from('bunsou_rows').select('session_id,koma_num,purpose,advice,memo,parts');
+  if(keyword){
+    rowQuery = rowQuery.or(`purpose.ilike.%${keyword}%,advice.ilike.%${keyword}%,memo.ilike.%${keyword}%`);
+  }
+  const {data:matchedRows} = await rowQuery;
+  if(!matchedRows) return;
+
+  // パートフィルタ（JSON文字列内に含まれるか）
+  const filteredRows = part
+    ? matchedRows.filter(r=>{ try{ return JSON.parse(r.parts||'[]').includes(part); }catch(e){return false;} })
+    : matchedRows;
+
+  const matchedSids = [...new Set(filteredRows.map(r=>r.session_id))];
+
+  // セッションを日付フィルタ
+  let sessions = bunsouSessions.filter(s=>matchedSids.includes(s.id));
+  if(date){
+    sessions = sessions.filter(s=>{
+      if(!s.session_date) return false;
+      return s.session_date.startsWith(date);
+    });
+  }
+
+  const resultDiv = document.getElementById('bsSearchResult');
+  resultDiv.style.display = '';
+  resultDiv.textContent = `🔍 検索結果：${sessions.length}件の分奏表、${filteredRows.length}行がヒット`;
+
+  renderBunsouList(sessions);
+  // ヒットしたセッションを自動展開
+  for(const s of sessions){
+    const body = document.getElementById('bsbody-'+s.id);
+    if(!body) continue;
+    body.classList.add('open');
+    if(!body.dataset.loaded){
+      body.dataset.loaded='1';
+      const rowsForSid = filteredRows.filter(r=>r.session_id===s.id);
+      // highlight
+      await loadBunsouRows(s.id);
+      // ヒット行を黄色強調
+      for(const r of rowsForSid){
+        const tr = document.getElementById('bsrow-'+r.id); // IDがないので別途処理不要（全行表示）
+      }
+    }
+  }
+}
+
+function clearBunsouSearch(){
+  bsSearchActive = false;
+  document.getElementById('bsSearchText').value='';
+  document.getElementById('bsSearchPart').value='';
+  document.getElementById('bsSearchDate').value='';
+  document.getElementById('bsSearchResult').style.display='none';
+  renderBunsouList();
+}
+
+document.getElementById('bsSearchText').addEventListener('input', debounceSearch);
+document.getElementById('bsSearchPart').addEventListener('change', runBunsouSearch);
+document.getElementById('bsSearchDate').addEventListener('change', runBunsouSearch);
+document.getElementById('bsSearchClear').addEventListener('click', clearBunsouSearch);
+
+let bsSearchTimer;
+function debounceSearch(){ clearTimeout(bsSearchTimer); bsSearchTimer=setTimeout(runBunsouSearch,400); }
 
 async function deleteBunsouSession(sid){
   if(!confirm('この分奏表を削除しますか？')) return;
