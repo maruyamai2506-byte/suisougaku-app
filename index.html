@@ -717,6 +717,62 @@ body.admin-mode .pdel{display:block;}
   border-color:var(--accent3);
 }
 
+
+/* ビュー切替ボタン */
+.bsview-btn{
+  padding:7px 14px;background:none;border:none;
+  color:var(--text3);font-size:12px;cursor:pointer;
+  font-family:'Noto Sans JP',sans-serif;transition:color .15s,background .15s;
+}
+.bsview-btn.active{background:var(--accent3);color:var(--bg);font-weight:700;}
+.bsview-btn:hover:not(.active){color:var(--text);}
+
+/* フレーズタグ */
+.bs-phrase-tag{
+  display:inline-flex;align-items:center;gap:3px;
+  background:rgba(100,180,255,0.18);color:var(--text);
+  border:1px solid rgba(100,180,255,0.35);
+  border-radius:20px;padding:2px 8px 2px 10px;font-size:11px;
+  white-space:nowrap;margin:2px;
+}
+.bs-phrase-tag small{color:var(--text3);font-size:10px;margin-left:2px;}
+.bs-phrase-floating{
+  position:absolute;z-index:500;
+  background:var(--surface);border:1px solid var(--border2);
+  border-radius:10px;padding:6px;
+  box-shadow:0 8px 32px rgba(0,0,0,0.4);
+  max-height:260px;overflow-y:auto;min-width:220px;
+}
+
+/* マトリクステーブル */
+.bs-matrix-table{
+  border-collapse:collapse;font-size:12px;
+  min-width:600px;
+}
+.bs-matrix-table th{
+  background:var(--surface2);color:var(--text2);
+  padding:10px 14px;text-align:center;font-weight:600;
+  border:1px solid var(--border);white-space:nowrap;min-width:100px;
+}
+.bs-matrix-table th:first-child{text-align:left;min-width:120px;}
+.bs-matrix-part{
+  padding:10px 14px;font-weight:600;color:var(--text);
+  border:1px solid var(--border);white-space:nowrap;
+  background:var(--surface2);
+}
+.bs-matrix-cell{
+  padding:8px 10px;border:1px solid var(--border);
+  vertical-align:top;text-align:center;min-width:100px;
+}
+.bs-matrix-cell.empty{background:transparent;}
+.bs-matrix-cell.has-data{
+  background:rgba(100,200,120,0.12);cursor:pointer;
+  transition:background .15s;
+}
+.bs-matrix-cell.has-data:hover{background:rgba(100,200,120,0.25);}
+.bs-matrix-count{font-weight:700;color:var(--accent2);font-size:14px;}
+.bs-matrix-dates{font-size:10px;color:var(--text3);margin-top:2px;}
+
 </style>
 </head>
 <body>
@@ -825,11 +881,21 @@ body.admin-mode .pdel{display:block;}
 
   <!-- 分奏表セクション -->
   <div id="bunsouSection" style="display:none;position:relative;z-index:1;flex:1;overflow-y:auto;padding:24px 48px 40px;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-      <div style="font-family:'Noto Serif JP',serif;font-size:15px;color:var(--text2);letter-spacing:.1em;">分奏記録</div>
-      <button id="btnAddBunsou" style="padding:8px 18px;background:var(--accent);color:#1a1200;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Noto Sans JP',sans-serif;">＋ 新しい分奏表</button>
+
+    <!-- 広場選択 + ビュー切替 + 新規作成 -->
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
+      <div style="font-family:'Noto Serif JP',serif;font-size:15px;color:var(--text2);letter-spacing:.1em;white-space:nowrap;">分奏記録</div>
+      <select id="bsRoomSelect" style="flex:1;min-width:160px;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;font-family:'Noto Sans JP',sans-serif;outline:none;">
+        <option value="">広場を選択してください</option>
+      </select>
+      <div style="display:flex;background:var(--surface2);border:1px solid var(--border);border-radius:8px;overflow:hidden;">
+        <button class="bsview-btn active" id="btnViewList" onclick="switchBsView('list')" title="詳細ビュー">☰ 詳細</button>
+        <button class="bsview-btn" id="btnViewCal" onclick="switchBsView('cal')" title="カレンダービュー">📊 マトリクス</button>
+      </div>
+      <button id="btnAddBunsou" style="padding:8px 16px;background:var(--accent);color:#1a1200;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Noto Sans JP',sans-serif;">＋ 新しい分奏表</button>
     </div>
-    <!-- 検索バー -->
+
+    <!-- 検索バー（詳細ビューのみ表示） -->
     <div id="bsSearchBar" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;align-items:center;">
       <input id="bsSearchText" type="text" placeholder="🔍 目的・アドバイスをキーワード検索" style="flex:1;min-width:180px;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12px;font-family:'Noto Sans JP',sans-serif;outline:none;">
       <select id="bsSearchPart" style="padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12px;font-family:'Noto Sans JP',sans-serif;outline:none;">
@@ -860,7 +926,15 @@ body.admin-mode .pdel{display:block;}
       <button id="bsSearchClear" style="padding:8px 12px;background:none;border:1px solid var(--border);border-radius:8px;color:var(--text3);font-size:12px;cursor:pointer;font-family:'Noto Sans JP',sans-serif;">クリア</button>
     </div>
     <div id="bsSearchResult" style="display:none;margin-bottom:12px;padding:10px 14px;background:var(--surface2);border-radius:8px;font-size:12px;color:var(--text2);"></div>
+
+    <!-- 詳細リストビュー -->
     <div id="bunsouGrid" style="display:flex;flex-direction:column;gap:10px;"></div>
+
+    <!-- マトリクスビュー -->
+    <div id="bunsouMatrix" style="display:none;">
+      <div style="margin-bottom:10px;font-size:12px;color:var(--text3);">縦軸：パート　横軸：フレーズ（小節）　セル：日付・回数</div>
+      <div id="bsMatrixWrap" style="overflow-x:auto;"></div>
+    </div>
   </div>
 
   <!-- ROOM CREATE MODAL（homeScreen内） -->
@@ -905,6 +979,26 @@ body.admin-mode .pdel{display:block;}
       <div class="mr">
         <button class="mpri" id="bsOk">作成する</button>
         <button id="bsCancel">キャンセル</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- フレーズ追加モーダル -->
+  <div class="home-modal" id="phraseModal" style="position:fixed;inset:0;z-index:3100;background:rgba(0,0,0,0.75);display:none;align-items:center;justify-content:center;backdrop-filter:blur(6px);">
+    <div class="mbox" style="width:380px">
+      <h3>🎼 フレーズを追加</h3>
+      <label>フレーズ名</label>
+      <input id="phName" placeholder="例：Aメロ、サビ、コーダ">
+      <label>小節範囲</label>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input id="phStart" type="number" min="1" placeholder="開始" style="width:80px;">
+        <span style="color:var(--text3);">〜</span>
+        <input id="phEnd" type="number" min="1" placeholder="終了" style="width:80px;">
+        <span style="color:var(--text3);font-size:12px;">小節</span>
+      </div>
+      <div class="mr">
+        <button class="mpri" id="phOk">追加する</button>
+        <button id="phCancel">キャンセル</button>
       </div>
     </div>
   </div>
@@ -1195,7 +1289,7 @@ function switchHomeTab(tab){
   document.getElementById('randomSection').style.display = isPlaza ? '' : 'none';
   document.getElementById('roomsSection').style.display = isPlaza ? '' : 'none';
   document.getElementById('bunsouSection').style.display = isPlaza ? 'none' : '';
-  if(!isPlaza) loadBunsouList();
+  if(!isPlaza){ updateBsRoomSelect(); loadBunsouList(); }
 }
 
 // ══════════════════════════════════════════════
@@ -1217,11 +1311,44 @@ const PART_OPTIONS = [
 ];
 const ALL_PARTS = PART_OPTIONS.flatMap(g=>g.parts);
 
+// ── 広場選択セレクト更新 ────────────────────────────
+function updateBsRoomSelect(){
+  const sel = document.getElementById('bsRoomSelect');
+  const prev = sel.value;
+  sel.innerHTML = '<option value="">広場を選択してください</option>';
+  for(const r of allRooms){
+    const opt = document.createElement('option');
+    opt.value = r.id;
+    opt.textContent = (r.emoji||'🎵') + ' ' + r.title;
+    sel.appendChild(opt);
+  }
+  if(prev) sel.value = prev;
+}
+
+// ── ビュー切替 ───────────────────────────────────
+let currentBsView = 'list';
+function switchBsView(view){
+  currentBsView = view;
+  document.getElementById('btnViewList').classList.toggle('active', view==='list');
+  document.getElementById('btnViewCal').classList.toggle('active', view==='cal');
+  document.getElementById('bsSearchBar').style.display = view==='list' ? 'flex' : 'none';
+  document.getElementById('bunsouGrid').style.display = view==='list' ? 'flex' : 'none';
+  document.getElementById('bunsouMatrix').style.display = view==='cal' ? '' : 'none';
+  if(view==='cal') renderBunsouMatrix();
+}
+
 // ── 分奏表一覧 ───────────────────────────────────
 async function loadBunsouList(){
-  const {data} = await sb.from('bunsou_sessions')
-    .select('id,title,session_date,koma_count,created_at')
+  const roomId = document.getElementById('bsRoomSelect').value;
+  if(!roomId){ 
+    document.getElementById('bunsouGrid').innerHTML = '<div style="text-align:center;padding:48px;color:var(--text3);font-size:13px;">広場を選択してください</div>';
+    return;
+  }
+  let q = sb.from('bunsou_sessions')
+    .select('id,title,session_date,koma_count,room_id,created_at')
+    .eq('room_id', roomId)
     .order('session_date',{ascending:false});
+  const {data} = await q;
   bunsouSessions = data || [];
   renderBunsouList();
 }
@@ -1342,13 +1469,16 @@ function refreshPartTags(rowId, parts){
 }
 
 // ── テーブル描画 ──────────────────────────────────
-function renderBunsouTable(body, sid, session, rows){
+async function renderBunsouTable(body, sid, session, rows){
+  const roomId = document.getElementById('bsRoomSelect').value;
+  if(roomId) await loadPhrases(roomId);
   body.innerHTML = `
     <div style="overflow-x:auto;">
     <table class="bs-table">
       <thead><tr>
         <th style="width:44px">コマ</th>
         <th style="min-width:180px">パート</th>
+        <th style="min-width:200px">フレーズ（小節）</th>
         <th style="min-width:160px">目的・練習内容</th>
         <th style="min-width:220px">アドバイス・気づき</th>
         <th style="min-width:100px">備考</th>
@@ -1369,14 +1499,22 @@ function renderBunsouTable(body, sid, session, rows){
 function appendBsRow(tbody, sid, row){
   const tr = document.createElement('tr');
   tr.id = 'bsrow-'+row.id;
+  // フレーズタグHTML（data-phid付き）
+  const phraseHtml = buildPhraseTags(row.id, row.phrase_ids||'[]');
   tr.innerHTML = `
     <td class="koma-num">${row.koma_num}</td>
     <td style="padding:4px 6px;">${buildPartTags(row.id, row.parts||'[]')}</td>
+    <td style="padding:4px 6px;">${phraseHtml}</td>
     <td contenteditable="true" data-field="purpose" data-id="${row.id}">${row.purpose||''}</td>
     <td contenteditable="true" data-field="advice" data-id="${row.id}">${row.advice||''}</td>
     <td contenteditable="true" data-field="memo" data-id="${row.id}">${row.memo||''}</td>
     <td><button class="bs-del-btn" onclick="deleteBunsouRow('${row.id}','${sid}')">✕</button></td>
   `;
+  // data-phid をタグに付与
+  tr.querySelectorAll('.bs-phrase-tag').forEach((tag,i)=>{
+    const ids = (()=>{ try{return JSON.parse(row.phrase_ids||'[]');}catch(e){return [];} })();
+    if(ids[i]) tag.dataset.phid = ids[i];
+  });
   tr.querySelectorAll('[contenteditable]').forEach(td=>{
     td.addEventListener('input',()=>{
       clearTimeout(bsSaveTimers[td.dataset.id+'_'+td.dataset.field]);
@@ -1395,7 +1533,7 @@ async function addBunsouRow(sid, komaNum){
   const existingRows = tbody ? tbody.querySelectorAll('tr').length : 0;
   const koma = komaNum||(existingRows+1);
   const {data:row} = await sb.from('bunsou_rows')
-    .insert({session_id:sid,koma_num:koma,purpose:'',advice:'',memo:'',parts:'[]'})
+    .insert({session_id:sid,koma_num:koma,purpose:'',advice:'',memo:'',parts:'[]',phrase_ids:'[]'})
     .select().single();
   if(row && tbody) appendBsRow(tbody, sid, row);
 }
@@ -1490,11 +1628,18 @@ async function deleteBunsouSession(sid){
   bunsouSessions = bunsouSessions.filter(s=>s.id!==sid);
 }
 
-// 分奏表作成モーダル
+// ── 広場選択変更 ────────────────────────────────
+document.getElementById('bsRoomSelect').addEventListener('change', ()=>{
+  clearBunsouSearch();
+  loadBunsouList();
+  if(currentBsView==='cal') renderBunsouMatrix();
+});
+
+// ── 分奏表作成モーダル ────────────────────────────
 document.getElementById('btnAddBunsou').onclick = ()=>{
-  // 日時デフォルトを今に
-  const now = new Date();
-  now.setMinutes(0,0,0);
+  const roomId = document.getElementById('bsRoomSelect').value;
+  if(!roomId){ alert('先に広場を選択してください'); return; }
+  const now = new Date(); now.setMinutes(0,0,0);
   document.getElementById('bsDate').value = now.toISOString().slice(0,16);
   document.getElementById('bsKoma').value = '';
   document.getElementById('bunsouModal').style.display = 'flex';
@@ -1503,21 +1648,224 @@ document.getElementById('bsCancel').onclick = ()=>{ document.getElementById('bun
 document.getElementById('bsOk').onclick = async ()=>{
   const date = document.getElementById('bsDate').value;
   const koma = parseInt(document.getElementById('bsKoma').value)||1;
+  const roomId = document.getElementById('bsRoomSelect').value;
   if(!date){ alert('日時を入力してください'); return; }
   const title = new Date(date).toLocaleDateString('ja-JP',{month:'long',day:'numeric'}) + ' 分奏';
   const {data:session} = await sb.from('bunsou_sessions')
-    .insert({title, session_date:date, koma_count:koma, created_by: currentUser?.id})
+    .insert({title, session_date:date, koma_count:koma, room_id:roomId, created_by: currentUser?.id})
     .select().single();
   document.getElementById('bunsouModal').style.display='none';
   if(session){
     bunsouSessions.unshift(session);
     renderBunsouList();
-    // 自動でコマ分の行を作成
     for(let i=1; i<=koma; i++) await addBunsouRow(session.id, i);
-    // 作ったカードを開く
     toggleBsCard(session.id);
   }
 };
+
+// ── フレーズ管理 ─────────────────────────────────
+let bunsouPhrases = [];   // 現在の広場のフレーズ一覧
+let phTargetSid = null;   // フレーズ追加時のsession_id（行の紐づけ用）
+
+async function loadPhrases(roomId){
+  const {data} = await sb.from('bunsou_phrases')
+    .select('*').eq('room_id', roomId)
+    .order('bar_start',{ascending:true});
+  bunsouPhrases = data || [];
+}
+
+function openPhraseModal(sid){
+  phTargetSid = sid;
+  document.getElementById('phName').value = '';
+  document.getElementById('phStart').value = '';
+  document.getElementById('phEnd').value = '';
+  document.getElementById('phraseModal').style.display = 'flex';
+}
+document.getElementById('phCancel').onclick = ()=>{ document.getElementById('phraseModal').style.display='none'; };
+document.getElementById('phOk').onclick = async ()=>{
+  const name = document.getElementById('phName').value.trim();
+  const start = parseInt(document.getElementById('phStart').value)||1;
+  const end = parseInt(document.getElementById('phEnd').value)||start;
+  const roomId = document.getElementById('bsRoomSelect').value;
+  if(!name){ alert('フレーズ名を入力してください'); return; }
+  const {data:ph} = await sb.from('bunsou_phrases')
+    .insert({room_id:roomId, name, bar_start:start, bar_end:end})
+    .select().single();
+  document.getElementById('phraseModal').style.display='none';
+  if(ph){
+    bunsouPhrases.push(ph);
+    bunsouPhrases.sort((a,b)=>a.bar_start-b.bar_start);
+    // フレーズピッカーを再描画
+    document.querySelectorAll('.bs-phrase-picker-wrap').forEach(w=>{
+      const rowId = w.dataset.rowid;
+      if(rowId) refreshPhraseTags(rowId);
+    });
+    if(currentBsView==='cal') renderBunsouMatrix();
+  }
+};
+
+// ── フレーズタグ（行への紐づけ） ──────────────────
+function buildPhraseTags(rowId, selectedIds){
+  const ids = Array.isArray(selectedIds) ? selectedIds
+    : (typeof selectedIds==='string' && selectedIds.startsWith('['))
+      ? (() => { try{ return JSON.parse(selectedIds); }catch(e){return [];} })()
+      : (selectedIds ? [selectedIds] : []);
+  const tags = ids.map(id=>{
+    const ph = bunsouPhrases.find(p=>p.id===id);
+    if(!ph) return '';
+    return `<span class="bs-phrase-tag">${ph.name}<small>（${ph.bar_start}〜${ph.bar_end}小節）</small><button class="bs-tag-rm" onclick="removePhraseTag('${rowId}','${id}')">×</button></span>`;
+  }).join('');
+  return `<div class="bs-phrase-picker-wrap" data-rowid="${rowId}" id="bsphrase-${rowId}">${tags}<button class="bs-tag-add" onclick="openPhrasePicker('${rowId}')">＋</button></div>`;
+}
+
+function openPhrasePicker(rowId){
+  document.querySelectorAll('.bs-phrase-floating').forEach(p=>p.remove());
+  const wrap = document.getElementById('bsphrase-'+rowId);
+  if(!wrap) return;
+  const picker = document.createElement('div');
+  picker.className = 'bs-phrase-floating';
+  if(bunsouPhrases.length===0){
+    const empty = document.createElement('div');
+    empty.style.cssText = 'padding:10px;font-size:12px;color:var(--text3);';
+    empty.textContent = 'フレーズがありません';
+    picker.appendChild(empty);
+  } else {
+    for(const ph of bunsouPhrases){
+      const btn = document.createElement('button');
+      btn.className = 'bs-picker-item';
+      btn.textContent = ph.name + '（' + ph.bar_start + '〜' + ph.bar_end + '小節）';
+      btn.onclick = ()=>{ addPhraseTag(rowId, ph.id); picker.remove(); };
+      picker.appendChild(btn);
+    }
+  }
+  const addNew = document.createElement('button');
+  addNew.className = 'bs-picker-item';
+  addNew.style.cssText = 'color:var(--accent);border-top:1px solid var(--border);margin-top:4px;';
+  addNew.textContent = '＋ 新しいフレーズを追加';
+  addNew.onclick = ()=>{ picker.remove(); openPhraseModal(rowId); };
+  picker.appendChild(addNew);
+  wrap.appendChild(picker);
+  setTimeout(()=>document.addEventListener('click', function h(e){
+    if(!picker.contains(e.target)){picker.remove();document.removeEventListener('click',h);}
+  }),10);
+}
+
+function getCurrentPhraseIds(rowId){
+  const wrap = document.getElementById('bsphrase-'+rowId);
+  if(!wrap) return [];
+  return [...wrap.querySelectorAll('.bs-phrase-tag')].map(t=>t.dataset.phid).filter(Boolean);
+}
+
+function getCurrentPhraseIdsFromDOM(rowId){
+  const wrap = document.getElementById('bsphrase-'+rowId);
+  if(!wrap) return [];
+  // data-phid をタグから取る
+  return [...wrap.querySelectorAll('[data-phid]')].map(t=>t.dataset.phid);
+}
+
+async function addPhraseTag(rowId, phId){
+  const ids = getCurrentPhraseIdsFromDOM(rowId);
+  if(ids.includes(phId)) return;
+  ids.push(phId);
+  await sb.from('bunsou_rows').update({phrase_ids: JSON.stringify(ids)}).eq('id', rowId);
+  refreshPhraseTags(rowId, ids);
+  if(currentBsView==='cal') renderBunsouMatrix();
+}
+
+async function removePhraseTag(rowId, phId){
+  const ids = getCurrentPhraseIdsFromDOM(rowId).filter(id=>id!==phId);
+  await sb.from('bunsou_rows').update({phrase_ids: JSON.stringify(ids)}).eq('id', rowId);
+  refreshPhraseTags(rowId, ids);
+  if(currentBsView==='cal') renderBunsouMatrix();
+}
+
+function refreshPhraseTags(rowId, ids){
+  const wrap = document.getElementById('bsphrase-'+rowId);
+  if(!wrap) return;
+  const idsArr = ids || getCurrentPhraseIdsFromDOM(rowId);
+  const tags = idsArr.map(id=>{
+    const ph = bunsouPhrases.find(p=>p.id===id);
+    if(!ph) return '';
+    return `<span class="bs-phrase-tag" data-phid="${ph.id}">${ph.name}<small>（${ph.bar_start}〜${ph.bar_end}小節）</small><button class="bs-tag-rm" onclick="removePhraseTag('${rowId}','${ph.id}')">×</button></span>`;
+  }).join('');
+  wrap.innerHTML = tags + `<button class="bs-tag-add" onclick="openPhrasePicker('${rowId}')">＋</button>`;
+}
+
+// ── マトリクスビュー ─────────────────────────────
+async function renderBunsouMatrix(){
+  const roomId = document.getElementById('bsRoomSelect').value;
+  const wrap = document.getElementById('bsMatrixWrap');
+  if(!roomId){ wrap.innerHTML = '<div style="padding:24px;color:var(--text3);font-size:13px;">広場を選択してください</div>'; return; }
+  await loadPhrases(roomId);
+  if(bunsouPhrases.length===0){
+    wrap.innerHTML = '<div style="padding:24px;color:var(--text3);font-size:13px;">フレーズがまだ登録されていません。詳細ビューの分奏表からフレーズを追加してください。</div>';
+    return;
+  }
+
+  // 全rowを取得
+  const sids = bunsouSessions.map(s=>s.id);
+  if(sids.length===0){ wrap.innerHTML = '<div style="padding:24px;color:var(--text3);font-size:13px;">分奏表がありません</div>'; return; }
+  const {data:allRows} = await sb.from('bunsou_rows').select('*').in('session_id', sids);
+  const rows = allRows || [];
+
+  // パートとフレーズの組み合わせで集計
+  // matrix[part][phraseId] = [{session_date, session_id, koma_num, count}]
+  const matrix = {};
+  for(const row of rows){
+    const parts = (() => { try{ return JSON.parse(row.parts||'[]'); }catch(e){return [];} })();
+    const phraseIds = (() => { try{ return JSON.parse(row.phrase_ids||'[]'); }catch(e){return [];} })();
+    const session = bunsouSessions.find(s=>s.id===row.session_id);
+    const dateStr = session?.session_date ? new Date(session.session_date).toLocaleDateString('ja-JP',{month:'2-digit',day:'2-digit'}) : '?';
+    for(const part of parts){
+      if(!matrix[part]) matrix[part] = {};
+      for(const phId of phraseIds){
+        if(!matrix[part][phId]) matrix[part][phId] = [];
+        matrix[part][phId].push({dateStr, session_id:row.session_id, koma_num:row.koma_num});
+      }
+    }
+  }
+
+  const partsInData = [...new Set(rows.flatMap(r=>{ try{ return JSON.parse(r.parts||'[]'); }catch(e){return [];} }))];
+  // パート定義順に並べる
+  const orderedParts = ALL_PARTS.filter(p=>partsInData.includes(p));
+  if(orderedParts.length===0){ wrap.innerHTML = '<div style="padding:24px;color:var(--text3);font-size:13px;">パートが設定された行がありません</div>'; return; }
+
+  // テーブル生成
+  let tbl = '<table class="bs-matrix-table"><thead><tr><th>パート</th>';
+  for(const ph of bunsouPhrases){
+    tbl += `<th>${ph.name}<div style="font-size:10px;color:var(--text3);font-weight:400;">${ph.bar_start}〜${ph.bar_end}小節</div></th>`;
+  }
+  tbl += '</tr></thead><tbody>';
+
+  for(const part of orderedParts){
+    tbl += `<tr><td class="bs-matrix-part">${part}</td>`;
+    for(const ph of bunsouPhrases){
+      const entries = matrix[part]?.[ph.id] || [];
+      if(entries.length===0){
+        tbl += '<td class="bs-matrix-cell empty"></td>';
+      } else {
+        const count = entries.length;
+        const dates = [...new Set(entries.map(e=>e.dateStr))].join('、');
+        tbl += `<td class="bs-matrix-cell has-data" onclick="jumpToBunsouSession('${entries[0].session_id}')">
+          <div class="bs-matrix-count">${count}回</div>
+          <div class="bs-matrix-dates">${dates}</div>
+        </td>`;
+      }
+    }
+    tbl += '</tr>';
+  }
+  tbl += '</tbody></table>';
+  wrap.innerHTML = tbl;
+}
+
+async function jumpToBunsouSession(sid){
+  switchBsView('list');
+  await new Promise(r=>setTimeout(r,50));
+  const card = document.getElementById('bscard-'+sid);
+  if(card){ card.scrollIntoView({behavior:'smooth',block:'start'}); }
+  const body = document.getElementById('bsbody-'+sid);
+  if(body && !body.classList.contains('open')) await toggleBsCard(sid);
+}
 
 // ══════════════════════════════════════════════
 //  Rooms (広場) — CRUD
