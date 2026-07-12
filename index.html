@@ -1532,9 +1532,21 @@ async function addBunsouRow(sid, komaNum){
   const tbody = document.getElementById('bstbody-'+sid);
   const existingRows = tbody ? tbody.querySelectorAll('tr').length : 0;
   const koma = komaNum||(existingRows+1);
-  const {data:row} = await sb.from('bunsou_rows')
+  const {data:row, error} = await sb.from('bunsou_rows')
     .insert({session_id:sid,koma_num:koma,purpose:'',advice:'',memo:'',parts:'[]',phrase_ids:'[]'})
     .select().single();
+  if(error){
+    console.error('行の追加に失敗:', error.message);
+    // phrase_ids カラムが存在しない場合はフォールバック
+    if(error.message && error.message.includes('phrase_ids')){
+      const {data:row2,error:e2} = await sb.from('bunsou_rows')
+        .insert({session_id:sid,koma_num:koma,purpose:'',advice:'',memo:'',parts:'[]'})
+        .select().single();
+      if(row2 && tbody) appendBsRow(tbody, sid, {...row2, phrase_ids:'[]'});
+      else console.error('フォールバックも失敗:', e2?.message);
+    }
+    return;
+  }
   if(row && tbody) appendBsRow(tbody, sid, row);
 }
 
